@@ -1,57 +1,164 @@
-# Painting 3D Animation
+# Gallery-Quality Painting Animation Studio
 
-This project creates a 3D parallax effect from a static image using depth estimation. It analyzes the depth in an image and generates frames with a parallax effect to create a video with a 3D-like appearance.
+This project creates stunning, gallery-quality 3D animations from static images using advanced depth estimation and artistic effects. Inspired by digital art exhibitions like **NEW BORN** by Hakan & Süleyman Yılmaz at [Acıbadem Art Gallery](https://www.acibadem.com.tr/sanat/).
 
-## Features
+## ✨ Features
 
-- Uses MiDaS depth estimation model for accurate depth mapping
-- Creates smooth parallax animation effects
-- Exports high-quality MP4 video
-- Progress indicators and error handling
+- **5 Artistic Styles**: Ethereal, Cyberpunk, Impressionist, Abstract, and Dreamlike
+- **Gallery-Quality Output**: Professional video encoding with customizable quality
+- **Advanced Depth Mapping**: Uses MiDaS AI for precise depth analysis
+- **Organic Animations**: Breathing, flowing effects that bring paintings to life
+- **Interactive Style Selector**: Easy-to-use interface for choosing effects
+- **Multiple Export Options**: From quick previews to exhibition-quality pieces
 
-## Requirements
+## 🎨 Artistic Styles
 
-- Python 3.8+
-- CUDA-compatible GPU (recommended for faster processing)
+### 1. Ethereal (Inspired by NEW BORN)
+- Soft, light-based effects with organic breathing movements
+- Warm color temperature with ethereal glow effects
+- Perfect for portraits and serene landscapes
 
-## Installation
+### 2. Cyberpunk
+- Futuristic neon effects with geometric distortions
+- Enhanced blues and reds for sci-fi aesthetics
+- Sharp, angular movements
 
-1. Install the required dependencies:
+### 3. Impressionist
+- Painterly brush-stroke effects
+- Soft color enhancements
+- Direction-based depth movements
+
+### 4. Abstract
+- Kaleidoscope-like geometric transformations
+- Radial distortions from center point
+- Perfect for creating surreal effects
+
+### 5. Dreamlike
+- Liquid, wave-like flowing effects
+- Multiple wave interference patterns
+- Soft color enhancements for dream-like quality
+
+## 🚀 Quick Start
+
+### Basic Usage
 ```bash
+# Activate virtual environment
+source venv/bin/activate
+
+# Run basic animation
+python animate_painting.py
+
+# Run premium version with ethereal style
+python animate_painting_premium.py
+```
+
+### Interactive Style Selector
+```bash
+# Launch the interactive studio
+python style_selector.py
+```
+
+The style selector allows you to:
+- Choose from 5 artistic styles
+- Select duration (3-8 seconds)
+- Pick quality level (Draft to Exhibition)
+- Generate custom animations
+
+## 🛠️ Installation
+
+1. **Clone and setup**:
+```bash
+git clone <your-repo>
+cd painting
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-2. Make sure you have the image file `IMG_7615.jpg` in the project directory
+2. **Add your image**:
+   - Place your image as `IMG_7615.jpg` or modify the `IMAGE_PATH` in the scripts
 
-## Usage
-
-Run the script:
+3. **Run**:
 ```bash
-python animate_painting.py
+python style_selector.py
 ```
 
-The script will:
-1. Load the MiDaS depth estimation model (this may take a few minutes on first run)
-2. Process your image to estimate depth
-3. Generate 120 frames with parallax effects
-4. Export the final video as `painting_3d_effect.mp4`
+## 📁 Project Structure
 
-## Configuration
+```
+painting/
+├── animate_painting.py          # Enhanced basic version
+├── animate_painting_premium.py  # Premium version with all styles
+├── style_selector.py           # Interactive style selection
+├── requirements.txt            # Dependencies
+├── IMG_7615.jpg               # Your input image
+├── README.md                  # This file
+└── venv/                      # Virtual environment
+```
 
-You can modify the following parameters in `animate_painting.py`:
+## 🎯 Output Quality Options
 
-- `IMAGE_PATH`: Path to your input image
-- `OUTPUT_VIDEO`: Name of the output video file
-- `num_frames`: Number of frames to generate (affects video length)
-- `shift`: Maximum parallax shift amount
+- **Draft**: Fast export, good for testing (4000k bitrate)
+- **Good**: Balanced quality and speed (8000k bitrate)
+- **Premium**: Gallery-ready quality (12000k bitrate)
+- **Exhibition**: Maximum detail for professional display (16000k bitrate)
 
-## Output
+## 🎬 Animation Durations
 
-The script generates a 5-second video (24 fps) with a 3D parallax effect based on the depth information in your image.
+- **Quick Preview**: 3 seconds (90 frames)
+- **Standard**: 5 seconds (150 frames)
+- **Gallery Quality**: 6 seconds (180 frames)
+- **Exhibition Piece**: 8 seconds (240 frames)
 
-## Troubleshooting
+## ⚙️ Configuration
 
-- If you get memory errors, try reducing the `num_frames` value
-- Make sure your image file exists and is readable
-- For better performance, use a CUDA-compatible GPU
-- If the model download fails, check your internet connection 
+### Custom Image
+```python
+IMAGE_PATH = "your_image.jpg"  # Change in any script
+```
+
+### Style Customization
+You can modify parameters in the `ArtisticStyleProcessor` class:
+- Wave frequencies and amplitudes
+- Color enhancement factors
+- Displacement strengths
+- Time-based effect intensities
+
+## 🎨 Artistic Inspiration
+
+This project draws inspiration from contemporary digital art exhibitions, particularly the ethereal and organic qualities found in works like NEW BORN by Hakan & Süleyman Yılmaz. The animations aim to capture the same sense of life and movement that makes gallery pieces so captivating.
+
+## 🔧 Requirements
+
+- Python 3.8+
+- CUDA-compatible GPU (recommended)
+- 4GB+ RAM for processing
+- ~2GB storage for models and outputs
+
+## 📊 Performance Tips
+
+- **GPU**: Significantly faster depth estimation
+- **Image Size**: Resize large images for faster processing
+- **Quality vs Speed**: Use Draft quality for testing, Premium/Exhibition for final output
+- **Memory**: Reduce frame count if you encounter memory issues
+
+## 🎭 Gallery Examples
+
+The project creates videos suitable for:
+- Digital art galleries
+- Social media art accounts
+- Personal art collections
+- Commercial art displays
+- Interactive exhibitions
+
+## 🤝 Contributing
+
+Feel free to contribute new artistic styles, effects, or optimizations. The modular design makes it easy to add new styles to the `ArtisticStyleProcessor` class.
+
+## 📄 License
+
+This project is inspired by and created for artistic purposes. Please credit when sharing or exhibiting the created works.
+
+---
+
+*"Every painting has a soul waiting to breathe. This studio helps it come alive."* 
