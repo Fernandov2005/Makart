@@ -8,9 +8,10 @@ from werkzeug.utils import secure_filename
 import time
 from functools import wraps
 
+# Initialize Flask app
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-app.config['SECRET_KEY'] = 'particle_animation_secret_key_2024'  # Change this in production
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'particle_animation_secret_key_2024')
 
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp'}
@@ -116,7 +117,7 @@ def upload_file():
             # Run animation script
             try:
                 result = subprocess.run([
-                    'python', 'animate_painting_premium.py'
+                    'python3', 'animate_painting_premium.py'
                 ], env=env, capture_output=True, text=True, timeout=300)  # 5 minute timeout
                 
                 print(f"🔄 Animation script exit code: {result.returncode}")
@@ -183,19 +184,15 @@ def status():
         'version': '2.0'
     })
 
-# For Vercel deployment - expose the app
+# Ensure directories exist
+os.makedirs('templates', exist_ok=True)
+os.makedirs('static', exist_ok=True)
+
+# For local development
 if __name__ == '__main__':
-    # Ensure templates directory exists
-    os.makedirs('templates', exist_ok=True)
-    os.makedirs('static', exist_ok=True)  # For logo and other static files
-    
-    print("🎨 Particle Animation Web App")
+    print("🎨 Makart Particle Animation Studio")
     print("🌐 Starting Flask server...")
-    print("📁 Make sure animate_painting_premium.py is in the same directory")
     print("🚀 Visit: http://localhost:5001")
     print("🔐 Login: olimpia@makincome.com / Chanel2808")
     
-    app.run(debug=True, host='0.0.0.0', port=5001)
-
-# Export app for Vercel
-application = app 
+    app.run(debug=True, host='0.0.0.0', port=5001) 
