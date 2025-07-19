@@ -48,136 +48,142 @@ def login():
     return render_template('login.html')
 
 @app.route('/logout')
+@login_required
 def logout():
     session.clear()
-    flash('You have been logged out successfully.', 'info')
+    flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
 @app.route('/')
-@login_required
+def home():
+    # Redirect to login if not authenticated
+    if 'logged_in' not in session:
+        return redirect(url_for('login'))
+    return redirect(url_for('index'))
+
+@app.route('/index')
+@login_required  
 def index():
-    return render_template('index.html', user_email=session.get('user_email'))
+    user_email = session.get('user_email', 'User')
+    return render_template('index.html', user_email=user_email)
 
 @app.route('/upload', methods=['POST'])
 @login_required
 def upload_file():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file uploaded'}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    
+    if not allowed_file(file.filename):
+        return jsonify({'error': 'File type not supported'}), 400
+    
     try:
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file provided'}), 400
+        # Get animation parameters from form
+        duration = int(request.form.get('duration', 10))
+        quality = request.form.get('quality', 'ultra')
+        style = request.form.get('style', 'particle_powder')
         
-        file = request.files['file']
-        
-        if file.filename == '':
-            return jsonify({'error': 'No file selected'}), 400
-        
-        if not allowed_file(file.filename):
-            return jsonify({'error': 'Invalid file type. Please upload an image file.'}), 400
-        
-        # Get animation options from form
-        duration = int(request.form.get('duration', 10))  # Default 10 seconds
-        quality = request.form.get('quality', 'ultra')    # Default ultra quality
-        style = request.form.get('style', 'particle_powder')  # Default particle style
-        
-        # Validate duration (5-30 seconds)
-        duration = max(5, min(30, duration))
-        
-        # Create temporary directory for this job
-        job_id = str(uuid.uuid4())
-        temp_dir = tempfile.mkdtemp(prefix=f'painting_job_{job_id}_')
+        # Create temporary directory
+        temp_dir = tempfile.mkdtemp()
         
         try:
-            # Save uploaded file temporarily
+            # Save uploaded file
             filename = secure_filename(file.filename)
             file_extension = filename.rsplit('.', 1)[1].lower()
-            input_path = os.path.join(temp_dir, f'input.{file_extension}')
-            output_path = os.path.join(temp_dir, 'output.mp4')
-            
+            temp_filename = f"input_{uuid.uuid4()}.{file_extension}"
+            input_path = os.path.join(temp_dir, temp_filename)
             file.save(input_path)
             
-            # Run the animation script
-            script_path = os.path.abspath('animate_painting_premium.py')
+            # Output file path
+            output_filename = f"particle_animation_{uuid.uuid4()}.mp4"
+            output_path = os.path.join(temp_dir, output_filename)
             
-            # Modify the environment to use our temp files and options
+            # Set environment variables for the animation script
             env = os.environ.copy()
-            env['PAINTING_INPUT_PATH'] = input_path
-            env['PAINTING_OUTPUT_PATH'] = output_path
+            env['ANIMATION_INPUT_PATH'] = input_path
+            env['ANIMATION_OUTPUT_PATH'] = output_path
             env['ANIMATION_DURATION'] = str(duration)
             env['ANIMATION_QUALITY'] = quality
             env['ANIMATION_STYLE'] = style
             
-            print(f"🎬 Starting animation for job {job_id}")
+            print(f"🎨 Starting animation: {duration}s, {quality} quality, {style} style")
             print(f"📁 Input: {input_path}")
             print(f"📁 Output: {output_path}")
-            print(f"⏱️ Duration: {duration}s | Quality: {quality} | Style: {style}")
             
-            # Calculate timeout based on duration (longer videos need more time)
-            timeout_seconds = max(300, duration * 30)  # At least 5 minutes, more for longer videos
+            # Run animation script
+            try:
+                result = subprocess.run([
+                    'python', 'animate_painting_premium.py'
+                ], env=env, capture_output=True, text=True, timeout=300)  # 5 minute timeout
+                
+                print(f"🔄 Animation script exit code: {result.returncode}")
+                if result.stdout:
+                    print(f"📝 Script output: {result.stdout}")
+                if result.stderr:
+                    print(f"⚠️ Script errors: {result.stderr}")
+                
+                if result.returncode != 0:
+                    raise subprocess.CalledProcessError(result.returncode, 'animate_painting_premium.py', result.stderr)
+                
+            except subprocess.TimeoutExpired:
+                print("⏰ Animation script timed out")
+                raise Exception("Animation processing timed out. Please try with a smaller image or lower quality setting.")
+            except subprocess.CalledProcessError as e:
+                print(f"💥 Animation script failed: {e}")
+                raise Exception(f"Animation processing failed: {e.stderr}")
+            except Exception as e:
+                print(f"🚨 Unexpected error: {e}")
+                raise Exception(f"Animation processing error: {str(e)}")
             
-            # Run the script
-            result = subprocess.run(
-                ['python', script_path],
-                env=env,
-                cwd=os.path.dirname(script_path),
-                capture_output=True,
-                text=True,
-                timeout=timeout_seconds
-            )
+            # Check if output file was created
+            if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
+                raise Exception("Animation file was not generated properly")
             
-            if result.returncode != 0:
-                print(f"❌ Animation failed for job {job_id}")
-                print(f"Error: {result.stderr}")
-                return jsonify({
-                    'error': f'Animation failed: {result.stderr}'
-                }), 500
+            print(f"✅ Animation complete: {output_path} ({os.path.getsize(output_path)} bytes)")
             
-            if not os.path.exists(output_path):
-                return jsonify({
-                    'error': 'Animation completed but output file not found'
-                }), 500
-            
-            print(f"✅ Animation completed for job {job_id}")
-            
-            # Clean up function to run after response is sent
+            # Create a function to cleanup after sending file
             @after_this_request
             def cleanup(response):
                 try:
-                    time.sleep(1)  # Give time for download to start
                     shutil.rmtree(temp_dir)
-                    print(f"🧹 Cleaned up temporary files for job {job_id}")
+                    print(f"🧹 Cleaned up temporary directory: {temp_dir}")
                 except Exception as e:
-                    print(f"⚠️ Cleanup failed for job {job_id}: {e}")
+                    print(f"⚠️ Failed to cleanup {temp_dir}: {e}")
                 return response
             
-            # Send the video file
+            # Send file with proper headers
             return send_file(
                 output_path,
                 as_attachment=True,
-                download_name=f'particle_animation_{duration}s_{quality}_{int(time.time())}.mp4',
+                download_name=f"particle_animation_{duration}s_{quality}.mp4",
                 mimetype='video/mp4'
             )
             
-        except subprocess.TimeoutExpired:
-            return jsonify({'error': f'Animation processing timed out ({timeout_seconds//60} minute limit)'}), 500
         except Exception as e:
-            print(f"❌ Unexpected error for job {job_id}: {e}")
-            return jsonify({'error': f'Processing error: {str(e)}'}), 500
-        finally:
-            # Fallback cleanup in case something goes wrong
+            print(f"💥 Upload processing error: {e}")
+            # Cleanup on error
             try:
-                if os.path.exists(temp_dir):
-                    shutil.rmtree(temp_dir)
+                shutil.rmtree(temp_dir)
             except:
                 pass
-                
+            return jsonify({'error': str(e)}), 500
+            
     except Exception as e:
-        print(f"❌ Upload error: {e}")
-        return jsonify({'error': f'Upload error: {str(e)}'}), 500
+        print(f"🚨 General upload error: {e}")
+        return jsonify({'error': 'Failed to process file'}), 500
 
 @app.route('/status')
-@login_required
 def status():
-    return jsonify({'status': 'ready', 'user': session.get('user_email')})
+    return jsonify({
+        'status': 'running',
+        'message': 'Makart Particle Animation Studio',
+        'version': '2.0'
+    })
 
+# For Vercel deployment - expose the app
 if __name__ == '__main__':
     # Ensure templates directory exists
     os.makedirs('templates', exist_ok=True)
@@ -189,4 +195,7 @@ if __name__ == '__main__':
     print("🚀 Visit: http://localhost:5001")
     print("🔐 Login: olimpia@makincome.com / Chanel2808")
     
-    app.run(debug=True, host='0.0.0.0', port=5001) 
+    app.run(debug=True, host='0.0.0.0', port=5001)
+
+# Export app for Vercel
+application = app 
