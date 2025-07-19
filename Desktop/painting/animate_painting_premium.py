@@ -7,214 +7,290 @@ from moviepy.editor import ImageSequenceClip, CompositeVideoClip
 import os
 import sys
 import random
+import math
 
-class ParticleSystem:
-    def __init__(self, width, height, max_particles=2000):
+class AdvancedParticleSystem:
+    def __init__(self, width, height, image_array, depth_map):
         self.width = width
         self.height = height
-        self.max_particles = max_particles
         self.particles = []
-        
-    def add_particle(self, x, y, color, depth_val, frame_index):
-        """Add a new particle with 3D properties"""
-        # Particle properties based on depth
-        z_distance = depth_val * 100  # Depth determines how far particles float
-        velocity_x = random.uniform(-2, 2) * (1 + depth_val)
-        velocity_y = random.uniform(-3, -1) * (1 + depth_val * 2)  # Float upward
-        velocity_z = random.uniform(0.5, 2) * depth_val  # Forward movement
-        
-        particle = {
-            'x': x,
-            'y': y,
-            'z': z_distance,
-            'vx': velocity_x,
-            'vy': velocity_y,
-            'vz': velocity_z,
-            'color': color,
-            'size': random.uniform(2, 6) * (1 + depth_val),
-            'life': random.uniform(60, 120),  # Particle lifetime
-            'birth_frame': frame_index,
-            'opacity': 255,
-            'rotation': random.uniform(0, 360),
-            'rotation_speed': random.uniform(-5, 5)
+        self.original_image = image_array.copy()
+        self.depth_map = depth_map
+        self.canvas_bounds = {'left': 0, 'right': width, 'top': 0, 'bottom': height}
+        self.expanded_bounds = {
+            'left': -width//2, 'right': width + width//2,
+            'top': -height//2, 'bottom': height + height//2
         }
+        self.initialize_particles()
         
-        if len(self.particles) < self.max_particles:
-            self.particles.append(particle)
+    def initialize_particles(self):
+        """Convert the ENTIRE painting into particles - every pixel becomes a particle"""
+        print("🎨 Converting entire painting to particles...")
+        
+        # Sample every 2nd pixel to create dense particle coverage
+        step = 1  # Smaller step = more particles
+        particle_id = 0
+        
+        for y in range(0, self.height, step):
+            for x in range(0, self.width, step):
+                # Get pixel color and depth
+                pixel_color = tuple(self.original_image[y, x].astype(int))
+                depth_val = self.depth_map[y, x]
+                
+                # Create particle with original position tracking
+                particle = {
+                    'id': particle_id,
+                    'original_x': x,
+                    'original_y': y,
+                    'x': float(x),
+                    'y': float(y),
+                    'z': 0.0,
+                    'vx': 0.0,
+                    'vy': 0.0,
+                    'vz': 0.0,
+                    'color': pixel_color,
+                    'depth': depth_val,
+                    'size': random.uniform(1.5, 4.0),
+                    'opacity': 255,
+                    'phase': 'expanding',  # expanding, organized, returning
+                    'formation_angle': random.uniform(0, 2 * math.pi),
+                    'formation_radius': random.uniform(50, 200),
+                    'orbit_speed': random.uniform(0.02, 0.08),
+                    'return_speed': 0.0
+                }
+                
+                self.particles.append(particle)
+                particle_id += 1
+        
+        print(f"✨ Created {len(self.particles)} particles from the entire painting!")
     
-    def update_particles(self, frame_index):
-        """Update all particles for this frame"""
-        updated_particles = []
+    def get_organized_movement(self, particle, frame_index, total_frames):
+        """Calculate organized movement patterns"""
+        time_factor = frame_index / total_frames
+        
+        # Different movement patterns based on depth and position
+        center_x, center_y = self.width // 2, self.height // 2
+        
+        # 1. Spiral movement for foreground particles
+        if particle['depth'] > 0.6:
+            spiral_radius = 100 + 50 * math.sin(time_factor * 2 * math.pi)
+            spiral_angle = particle['formation_angle'] + time_factor * 4 * math.pi
+            target_x = center_x + spiral_radius * math.cos(spiral_angle)
+            target_y = center_y + spiral_radius * math.sin(spiral_angle)
+            
+        # 2. Orbital movement for mid-ground particles
+        elif particle['depth'] > 0.3:
+            orbit_radius = particle['formation_radius'] + 30 * math.sin(time_factor * 3 * math.pi)
+            orbit_angle = particle['formation_angle'] + particle['orbit_speed'] * frame_index
+            target_x = center_x + orbit_radius * math.cos(orbit_angle)
+            target_y = center_y + orbit_radius * math.sin(orbit_angle)
+            
+        # 3. Wave formation for background particles
+        else:
+            wave_amplitude = 80
+            wave_frequency = 0.02
+            wave_offset = time_factor * 2 * math.pi
+            target_x = particle['original_x'] + wave_amplitude * math.sin(particle['original_y'] * wave_frequency + wave_offset)
+            target_y = particle['original_y'] + wave_amplitude * math.cos(particle['original_x'] * wave_frequency + wave_offset)
+        
+        return target_x, target_y
+    
+    def update_particles(self, frame_index, total_frames):
+        """Update all particles with sophisticated movement phases"""
+        time_factor = frame_index / total_frames
+        
+        # Define animation phases
+        expansion_phase = 0.25   # First 25% - particles expand out
+        organized_phase = 0.60   # Next 60% - organized movement
+        return_phase = 0.15      # Last 15% - return to original positions
         
         for particle in self.particles:
-            age = frame_index - particle['birth_frame']
-            
-            if age < particle['life']:
-                # Update position with 3D physics
-                particle['x'] += particle['vx']
-                particle['y'] += particle['vy']
-                particle['z'] += particle['vz']
+            if time_factor < expansion_phase:
+                # EXPANSION PHASE - particles explode out of the painting
+                self.update_expansion_phase(particle, time_factor / expansion_phase)
                 
-                # Add gravity and air resistance
-                particle['vy'] += 0.1  # Slight gravity
-                particle['vx'] *= 0.995  # Air resistance
-                particle['vy'] *= 0.995
-                particle['vz'] *= 0.99
+            elif time_factor < expansion_phase + organized_phase:
+                # ORGANIZED MOVEMENT PHASE - beautiful formations
+                org_time = (time_factor - expansion_phase) / organized_phase
+                self.update_organized_phase(particle, org_time, frame_index, total_frames)
                 
-                # Update visual properties
-                particle['rotation'] += particle['rotation_speed']
-                life_ratio = age / particle['life']
-                particle['opacity'] = int(255 * (1 - life_ratio))
-                
-                # 3D size scaling based on z-distance
-                scale_factor = 1 + (particle['z'] / 200)
-                particle['current_size'] = particle['size'] * scale_factor
-                
-                updated_particles.append(particle)
-        
-        self.particles = updated_particles
+            else:
+                # RETURN PHASE - particles return to original positions
+                return_time = (time_factor - expansion_phase - organized_phase) / return_phase
+                self.update_return_phase(particle, return_time)
     
-    def render_particles(self, image):
-        """Render all particles onto the image"""
-        img_array = np.array(image)
-        draw_img = Image.fromarray(img_array)
-        draw = ImageDraw.Draw(draw_img, 'RGBA')
+    def update_expansion_phase(self, particle, phase_progress):
+        """Particles explode out of the painting with vibrant colors"""
+        # Calculate direction from center
+        center_x, center_y = self.width // 2, self.height // 2
+        dx = particle['original_x'] - center_x
+        dy = particle['original_y'] - center_y
         
-        # Sort particles by z-distance (far to near)
-        sorted_particles = sorted(self.particles, key=lambda p: p['z'], reverse=True)
+        # Normalize direction
+        distance = math.sqrt(dx*dx + dy*dy)
+        if distance > 0:
+            dx /= distance
+            dy /= distance
+        
+        # Explosion strength based on depth (foreground explodes more)
+        explosion_strength = 200 + particle['depth'] * 300
+        
+        # Curved explosion path
+        curve_factor = math.sin(phase_progress * math.pi)
+        explosion_distance = explosion_strength * curve_factor
+        
+        # Add some randomness for organic movement
+        random_offset_x = 30 * math.sin(phase_progress * 4 * math.pi + particle['id'] * 0.1)
+        random_offset_y = 30 * math.cos(phase_progress * 4 * math.pi + particle['id'] * 0.1)
+        
+        # Calculate new position
+        particle['x'] = particle['original_x'] + dx * explosion_distance + random_offset_x
+        particle['y'] = particle['original_y'] + dy * explosion_distance + random_offset_y
+        
+        # Add slight rotation around original position
+        rotation_angle = phase_progress * math.pi * 0.5
+        cos_rot = math.cos(rotation_angle)
+        sin_rot = math.sin(rotation_angle)
+        
+        relative_x = particle['x'] - particle['original_x']
+        relative_y = particle['y'] - particle['original_y']
+        
+        particle['x'] = particle['original_x'] + relative_x * cos_rot - relative_y * sin_rot
+        particle['y'] = particle['original_y'] + relative_x * sin_rot + relative_y * cos_rot
+        
+        # Keep particles vibrant during explosion
+        base_size = 3.0 + particle['depth'] * 2.0  # Larger for explosion
+        particle['size'] = base_size + 1.0 * math.sin(phase_progress * 6 * math.pi + particle['id'] * 0.1)
+        
+        # Maintain full opacity - particles stay bright!
+        particle['opacity'] = 255
+        
+        particle['phase'] = 'expanding'
+    
+    def update_organized_phase(self, particle, phase_progress, frame_index, total_frames):
+        """Particles perform organized movements while staying vibrant"""
+        target_x, target_y = self.get_organized_movement(particle, frame_index, total_frames)
+        
+        # Smooth movement towards target
+        movement_speed = 0.1
+        particle['x'] += (target_x - particle['x']) * movement_speed
+        particle['y'] += (target_y - particle['y']) * movement_speed
+        
+        # Add some Z-axis movement for 3D effect
+        particle['z'] = 30 * math.sin(phase_progress * 2 * math.pi + particle['id'] * 0.01)
+        
+        # Size pulsing effect - keep particles visible
+        base_size = 2.5 + particle['depth'] * 2.5  # Slightly larger for better visibility
+        pulse = 0.8 * math.sin(phase_progress * 4 * math.pi + particle['id'] * 0.05)  # More dramatic pulse
+        particle['size'] = base_size + pulse
+        
+        # Maintain full opacity - particles stay bright!
+        particle['opacity'] = 255
+        
+        particle['phase'] = 'organized'
+    
+    def update_return_phase(self, particle, phase_progress):
+        """Particles return to their original positions but stay as vibrant particles"""
+        # Smooth return to original position
+        return_curve = 1 - (1 - phase_progress) * (1 - phase_progress)  # Ease-in curve
+        
+        particle['x'] = particle['x'] + (particle['original_x'] - particle['x']) * return_curve * 0.2
+        particle['y'] = particle['y'] + (particle['original_y'] - particle['y']) * return_curve * 0.2
+        particle['z'] = particle['z'] * (1 - return_curve)
+        
+        # Keep particles vibrant and visible - no size reduction
+        base_size = 2.0 + particle['depth'] * 2.0
+        particle['size'] = base_size + 0.5 * math.sin(phase_progress * 4 * math.pi + particle['id'] * 0.05)
+        
+        # Maintain full opacity - particles stay bright!
+        particle['opacity'] = 255
+        
+        particle['phase'] = 'returning'
+    
+    def render_particles(self, frame_index, total_frames):
+        """Render all particles to create the frame"""
+        # Create expanded canvas to show particles outside original bounds
+        expanded_width = self.width * 2
+        expanded_height = self.height * 2
+        
+        # Create the image with expanded bounds
+        img_array = np.zeros((expanded_height, expanded_width, 3), dtype=np.uint8)
+        
+        # Calculate offset to center original image area
+        offset_x = self.width // 2
+        offset_y = self.height // 2
+        
+        # Sort particles by z-distance (back to front)
+        sorted_particles = sorted(self.particles, key=lambda p: p.get('z', 0))
         
         for particle in sorted_particles:
-            if 0 <= particle['x'] < self.width and 0 <= particle['y'] < self.height:
-                # Create particle color with opacity
+            # Calculate screen position with offset
+            screen_x = int(particle['x'] + offset_x)
+            screen_y = int(particle['y'] + offset_y)
+            
+            # Check if particle is in expanded bounds
+            if (0 <= screen_x < expanded_width and 0 <= screen_y < expanded_height):
+                # Calculate size with 3D perspective
+                z_factor = 1.0 + particle.get('z', 0) / 100.0
+                size = max(1, int(particle['size'] * z_factor))
+                
+                # Get color
                 r, g, b = particle['color']
-                alpha = max(0, min(255, particle['opacity']))
-                color = (r, g, b, alpha)
                 
-                # Draw particle as circle with size based on 3D distance
-                size = max(1, int(particle['current_size']))
-                x, y = int(particle['x']), int(particle['y'])
+                # Apply depth-based color enhancement - make colors more vibrant!
+                depth_boost = 1.2 + particle['depth'] * 0.5  # Increased color boost
+                r = min(255, int(r * depth_boost))
+                g = min(255, int(g * depth_boost))
+                b = min(255, int(b * depth_boost))
                 
-                # Add slight blur for depth effect
-                if particle['z'] > 50:
-                    # Far particles are more blurred
-                    blur_size = max(1, int(particle['z'] / 30))
-                    for i in range(blur_size):
-                        offset = i - blur_size // 2
-                        alpha_reduced = alpha // (blur_size + 1)
-                        blur_color = (r, g, b, alpha_reduced)
-                        draw.ellipse([
-                            x + offset - size//2, y + offset - size//2,
-                            x + offset + size//2, y + offset + size//2
-                        ], fill=blur_color)
-                else:
-                    # Near particles are sharp
-                    draw.ellipse([
-                        x - size//2, y - size//2,
-                        x + size//2, y + size//2
-                    ], fill=color)
+                # Add extra vibrancy based on particle phase
+                phase_boost = 1.0
+                if particle['phase'] == 'expanding':
+                    phase_boost = 1.3  # Extra bright during explosion
+                elif particle['phase'] == 'organized':
+                    phase_boost = 1.2  # Bright during organized movement
+                else:  # returning
+                    phase_boost = 1.1  # Still bright when returning
+                
+                r = min(255, int(r * phase_boost))
+                g = min(255, int(g * phase_boost))
+                b = min(255, int(b * phase_boost))
+                
+                # Draw particle (simple circle for now, can be enhanced)
+                for dy in range(-size, size + 1):
+                    for dx in range(-size, size + 1):
+                        if dx*dx + dy*dy <= size*size:
+                            px = screen_x + dx
+                            py = screen_y + dy
+                            if 0 <= px < expanded_width and 0 <= py < expanded_height:
+                                # Blend with existing pixels
+                                img_array[py, px] = [r, g, b]
         
-        return draw_img
+        # Crop back to original size, centered
+        final_img = img_array[offset_y:offset_y+self.height, offset_x:offset_x+self.width]
+        
+        return final_img
 
 class ArtisticStyleProcessor:
     def __init__(self, width=1024, height=1024):
-        self.styles = {
-            'ethereal': self.ethereal_style,
-            'cyberpunk': self.cyberpunk_style,
-            'impressionist': self.impressionist_style,
-            'abstract': self.abstract_style,
-            'dreamlike': self.dreamlike_style,
-            'particle_powder': self.particle_powder_style
-        }
-        self.particle_system = ParticleSystem(width, height)
-        self.color_cache = {}
-    
-    def extract_dominant_colors(self, image, depth_map, num_colors=8):
-        """Extract dominant colors from different depth regions"""
-        img_array = np.array(image)
-        h, w, _ = img_array.shape
-        
-        # Divide into depth regions
-        depth_regions = []
-        for i in range(num_colors):
-            depth_threshold = i / num_colors
-            mask = (depth_map >= depth_threshold) & (depth_map < depth_threshold + 0.125)
-            if np.any(mask):
-                region_colors = img_array[mask]
-                if len(region_colors) > 0:
-                    avg_color = np.mean(region_colors, axis=0).astype(int)
-                    depth_regions.append((depth_threshold, tuple(avg_color)))
-        
-        return depth_regions
+        self.width = width
+        self.height = height
+        self.particle_system = None
     
     def particle_powder_style(self, image, depth_map, frame_index, total_frames):
-        """Amazing 3D particle powder effect where colors float off canvas"""
-        img_array = np.array(image).astype(np.float32)
-        h, w, c = img_array.shape
-        time_factor = frame_index / total_frames
+        """Revolutionary particle system where entire painting becomes organized particles"""
+        # Initialize particle system on first frame
+        if self.particle_system is None:
+            img_array = np.array(image)
+            self.particle_system = AdvancedParticleSystem(self.width, self.height, img_array, depth_map)
         
-        # Extract colors for particles if not cached
-        if not self.color_cache:
-            self.color_cache = self.extract_dominant_colors(image, depth_map)
+        # Update particles
+        self.particle_system.update_particles(frame_index, total_frames)
         
-        # Create base image with subtle movement
-        enhanced_img = img_array.copy()
+        # Render particles
+        particle_frame = self.particle_system.render_particles(frame_index, total_frames)
         
-        # Add particles based on depth and color intensity
-        particle_spawn_rate = max(1, int(30 * (1 + np.sin(time_factor * 4 * np.pi))))
-        
-        for _ in range(particle_spawn_rate):
-            # Random spawn location
-            x = random.randint(0, w-1)
-            y = random.randint(0, h-1)
-            depth_val = depth_map[y, x]
-            
-            # Higher depth areas spawn more particles
-            if random.random() < depth_val * 0.8:
-                # Get color from original image at this location
-                pixel_color = tuple(img_array[y, x].astype(int))
-                
-                # Add some color variation
-                r, g, b = pixel_color
-                r = max(0, min(255, r + random.randint(-20, 20)))
-                g = max(0, min(255, g + random.randint(-20, 20)))
-                b = max(0, min(255, b + random.randint(-20, 20)))
-                
-                self.particle_system.add_particle(x, y, (r, g, b), depth_val, frame_index)
-        
-        # Update particle system
-        self.particle_system.update_particles(frame_index)
-        
-        # Create depth-based color extraction effect on canvas
-        extraction_intensity = 0.3 + 0.2 * np.sin(time_factor * 2 * np.pi)
-        
-        for y in range(h):
-            for x in range(w):
-                depth_val = depth_map[y, x]
-                
-                # Areas with high depth lose color more (powder effect)
-                if depth_val > 0.6:
-                    fade_factor = 1 - (depth_val * extraction_intensity * 0.4)
-                    enhanced_img[y, x] *= fade_factor
-                    
-                    # Add slight desaturation where color is extracted
-                    gray_val = np.mean(enhanced_img[y, x])
-                    blend_factor = depth_val * 0.2
-                    enhanced_img[y, x] = enhanced_img[y, x] * (1 - blend_factor) + gray_val * blend_factor
-        
-        # Create subtle canvas movement
-        wave_strength = 2
-        for y in range(h):
-            wave_offset = int(wave_strength * np.sin(time_factor * 2 * np.pi + y * 0.01))
-            if wave_offset != 0:
-                enhanced_img[y] = np.roll(enhanced_img[y], wave_offset, axis=0)
-        
-        # Convert back to PIL Image
-        canvas_img = Image.fromarray(np.clip(enhanced_img, 0, 255).astype(np.uint8))
-        
-        # Render particles on top
-        final_img = self.particle_system.render_particles(canvas_img)
-        
-        return np.array(final_img)
+        return particle_frame
     
     def ethereal_style(self, image, depth_map, frame_index, total_frames):
         """Soft, ethereal, light-based effects like NEW BORN"""
@@ -370,11 +446,27 @@ class ArtisticStyleProcessor:
         return np.clip(enhanced_img, 0, 255).astype(np.uint8)
 
 def create_artistic_overlay(width, height, frame_index, total_frames, style='ethereal'):
-    """Create artistic overlay elements"""
+    """Create artistic overlay elements with phase-specific enhancements"""
     overlay = Image.new('RGBA', (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
     
     time_factor = frame_index / total_frames
+    
+    # Define phase boundaries
+    expansion_phase = 0.25
+    organized_phase = 0.60
+    return_phase = 0.15
+    
+    # Determine current phase
+    if time_factor < expansion_phase:
+        current_phase = "expansion"
+        phase_progress = time_factor / expansion_phase
+    elif time_factor < expansion_phase + organized_phase:
+        current_phase = "organized"
+        phase_progress = (time_factor - expansion_phase) / organized_phase
+    else:
+        current_phase = "return"
+        phase_progress = (time_factor - expansion_phase - organized_phase) / return_phase
     
     if style == 'ethereal':
         # Soft light rays
@@ -393,27 +485,135 @@ def create_artistic_overlay(width, height, frame_index, total_frames, style='eth
             draw.line([0, i, width, i], fill=(255, 0, 255, alpha), width=2)
     
     elif style == 'particle_powder':
-        # Add magical sparkles around particles
-        alpha = int(60 + 40 * np.sin(time_factor * 3 * np.pi))
-        for _ in range(20):
-            x = random.randint(0, width)
-            y = random.randint(0, height)
-            size = random.randint(2, 8)
-            sparkle_color = (255, 255, 255, alpha)
-            draw.ellipse([x-size, y-size, x+size, y+size], fill=sparkle_color)
+        # Phase-specific overlay enhancements
+        
+        if current_phase == "expansion":
+            # Explosion burst effects
+            alpha = int(120 + 80 * np.sin(phase_progress * 2 * np.pi))
+            center_x, center_y = width // 2, height // 2
+            
+            # Radial burst lines
+            for i in range(16):
+                angle = i * (2 * math.pi / 16)
+                burst_length = int(200 * phase_progress)
+                start_x = center_x + int(20 * math.cos(angle))
+                start_y = center_y + int(20 * math.sin(angle))
+                end_x = center_x + int(burst_length * math.cos(angle))
+                end_y = center_y + int(burst_length * math.sin(angle))
+                
+                draw.line([start_x, start_y, end_x, end_y], 
+                         fill=(255, 255, 255, alpha), width=3)
+            
+            # Explosion sparkles
+            for _ in range(30):
+                x = random.randint(0, width)
+                y = random.randint(0, height)
+                size = random.randint(2, 8)
+                sparkle_alpha = int(alpha * random.uniform(0.5, 1.0))
+                draw.ellipse([x-size, y-size, x+size, y+size], 
+                           fill=(255, 255, 255, sparkle_alpha))
+        
+        elif current_phase == "organized":
+            # Organized movement trails and formations
+            alpha = int(80 + 60 * np.sin(phase_progress * 3 * np.pi))
+            center_x, center_y = width // 2, height // 2
+            
+            # Spiral formation guides
+            for spiral in range(3):
+                spiral_points = []
+                for i in range(20):
+                    angle = i * 0.3 + phase_progress * 4 * math.pi + spiral * 2
+                    radius = 50 + i * 8
+                    x = center_x + int(radius * math.cos(angle))
+                    y = center_y + int(radius * math.sin(angle))
+                    spiral_points.append((x, y))
+                
+                # Draw spiral trail
+                for i in range(len(spiral_points) - 1):
+                    draw.line([spiral_points[i], spiral_points[i+1]], 
+                             fill=(255, 255, 255, alpha), width=2)
+            
+            # Orbital rings
+            for ring in range(3):
+                radius = 80 + ring * 40
+                ring_alpha = int(alpha * (1 - ring * 0.2))
+                draw.ellipse([
+                    center_x - radius, center_y - radius,
+                    center_x + radius, center_y + radius
+                ], outline=(255, 255, 255, ring_alpha), width=2)
+            
+            # Formation sparkles
+            for _ in range(40):
+                x = random.randint(0, width)
+                y = random.randint(0, height)
+                size = random.randint(1, 6)
+                sparkle_alpha = int(alpha * random.uniform(0.3, 0.8))
+                
+                # Colored sparkles for organized phase
+                colors = [(255, 255, 255), (255, 200, 200), (200, 255, 200), (200, 200, 255)]
+                color = random.choice(colors)
+                draw.ellipse([x-size, y-size, x+size, y+size], 
+                           fill=(*color, sparkle_alpha))
+        
+        else:  # return phase
+            # Return journey effects
+            alpha = int(100 + 50 * np.sin(phase_progress * 2 * np.pi))
+            
+            # Converging lines pointing toward original positions
+            for _ in range(12):
+                start_x = random.randint(0, width)
+                start_y = random.randint(0, height)
+                
+                # Lines converge toward center (representing return)
+                center_x, center_y = width // 2, height // 2
+                direction_x = (center_x - start_x) * 0.3
+                direction_y = (center_y - start_y) * 0.3
+                
+                end_x = int(start_x + direction_x)
+                end_y = int(start_y + direction_y)
+                
+                draw.line([start_x, start_y, end_x, end_y], 
+                         fill=(255, 255, 255, alpha), width=2)
+            
+            # Gentle glow effect for return
+            center_x, center_y = width // 2, height // 2
+            glow_radius = int(100 + 50 * np.sin(phase_progress * 3 * np.pi))
+            glow_alpha = int(alpha * 0.4)
+            
+            for i in range(5):
+                radius = glow_radius + i * 15
+                current_alpha = max(10, glow_alpha - i * 8)
+                draw.ellipse([
+                    center_x - radius, center_y - radius,
+                    center_x + radius, center_y + radius
+                ], outline=(255, 255, 255, current_alpha), width=1)
+            
+            # Return sparkles - fewer and more gentle
+            for _ in range(20):
+                x = random.randint(0, width)
+                y = random.randint(0, height)
+                size = random.randint(1, 4)
+                sparkle_alpha = int(alpha * random.uniform(0.3, 0.7))
+                draw.ellipse([x-size, y-size, x+size, y+size], 
+                           fill=(255, 255, 255, sparkle_alpha))
     
     return overlay
 
 def main():
-    # Configuration
-    IMAGE_PATH = "IMG_7615.jpg"
-    OUTPUT_VIDEO = "painting_3d_effect_premium.mp4"
+    # Configuration - can be overridden by environment variables
+    IMAGE_PATH = os.environ.get('PAINTING_INPUT_PATH', "IMG_7616.png")
+    OUTPUT_VIDEO = os.environ.get('PAINTING_OUTPUT_PATH', "painting_3d_effect_premium.mp4")
     
-    # Choose artistic style - NEW PARTICLE POWDER EFFECT!
-    ARTISTIC_STYLE = 'particle_powder'  # Options: ethereal, cyberpunk, impressionist, abstract, dreamlike, particle_powder
+    # Animation settings from web interface
+    ANIMATION_DURATION = int(os.environ.get('ANIMATION_DURATION', 10))  # seconds
+    ANIMATION_QUALITY = os.environ.get('ANIMATION_QUALITY', 'ultra')   # standard, high, ultra
+    ARTISTIC_STYLE = os.environ.get('ANIMATION_STYLE', 'particle_powder')  # style selection
     
-    print(f"🎨 Creating gallery-quality animation with '{ARTISTIC_STYLE}' style")
+    print(f"🎨 Creating revolutionary particle animation")
     print(f"📸 Loading image: {IMAGE_PATH}")
+    print(f"⏱️ Duration: {ANIMATION_DURATION} seconds")
+    print(f"🎯 Quality: {ANIMATION_QUALITY}")
+    print(f"🎭 Style: {ARTISTIC_STYLE}")
     
     if not os.path.exists(IMAGE_PATH):
         print(f"❌ Error: Image file '{IMAGE_PATH}' not found!")
@@ -431,9 +631,17 @@ def main():
         print("📸 Processing image...")
         img = Image.open(IMAGE_PATH).convert("RGB")
         
-        # Optimize size
-        if max(img.size) > 1200:
-            img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
+        # Optimize size based on quality setting
+        if ANIMATION_QUALITY == 'standard':
+            max_size = 800
+        elif ANIMATION_QUALITY == 'high':
+            max_size = 1000
+        else:  # ultra
+            max_size = 1200
+            
+        if max(img.size) > max_size:
+            img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+            print(f"📐 Resized to max {max_size}px for {ANIMATION_QUALITY} quality")
         
         img_np = np.array(img)
         img_input = transform(img_np)
@@ -450,29 +658,75 @@ def main():
         # Initialize artistic processor with image dimensions
         processor = ArtisticStyleProcessor(w, h)
         
-        # Create frames
+        # Calculate frames based on duration
+        fps = 30
+        num_frames = ANIMATION_DURATION * fps
+        
         print(f"🎬 Generating {ARTISTIC_STYLE} animation...")
+        print(f"📋 Animation settings:")
+        print(f"   ⏱️ Duration: {ANIMATION_DURATION} seconds ({num_frames} frames)")
+        print(f"   🎯 Quality: {ANIMATION_QUALITY}")
+        print(f"   📐 Resolution: {w}x{h}")
+        print("📋 Animation phases:")
+        print("   🚀 Phase 1 (0-25%): Explosive expansion - particles break free from canvas")
+        print("   🌀 Phase 2 (25-85%): Organized movement - spirals, orbits, and wave formations")
+        print("   🏠 Phase 3 (85-100%): Return journey - particles return to original positions")
+        print("   ✨ VIBRANT COLORS: Particles maintain bright colors throughout entire animation!")
+        print()
+        
         frames = []
-        num_frames = 240  # 8 seconds for particle effect
+        
+        # Define phase boundaries
+        expansion_end = int(num_frames * 0.25)
+        organized_end = int(num_frames * 0.85)
         
         for i in range(num_frames):
-            if i % 20 == 0:
-                print(f"✨ Frame {i+1}/{num_frames} - Particles: {len(processor.particle_system.particles)}")
+            # Determine current phase
+            if i < expansion_end:
+                phase = "🚀 EXPANSION"
+                phase_progress = (i / expansion_end) * 100
+            elif i < organized_end:
+                phase = "🌀 ORGANIZED"
+                phase_progress = ((i - expansion_end) / (organized_end - expansion_end)) * 100
+            else:
+                phase = "🏠 RETURNING"
+                phase_progress = ((i - organized_end) / (num_frames - organized_end)) * 100
+            
+            # Update progress less frequently for longer animations
+            progress_interval = max(10, num_frames // 30)  # Show ~30 updates max
+            if i % progress_interval == 0:
+                print(f"✨ Frame {i+1:3d}/{num_frames} | {phase} | Progress: {phase_progress:5.1f}%")
             
             # Apply artistic style
-            artistic_frame = processor.styles[ARTISTIC_STYLE](img, depth_norm, i, num_frames)
+            if hasattr(processor, ARTISTIC_STYLE):
+                if ARTISTIC_STYLE == 'particle_powder':
+                    artistic_frame = processor.particle_powder_style(img, depth_norm, i, num_frames)
+                else:
+                    artistic_frame = getattr(processor, ARTISTIC_STYLE)(img, depth_norm, i, num_frames)
+            else:
+                # Fallback to particle_powder if style not found
+                artistic_frame = processor.particle_powder_style(img, depth_norm, i, num_frames)
+            
             frame_img = Image.fromarray(artistic_frame)
             
             # Add artistic enhancement
             time_factor = i / num_frames
             
-            # Dynamic saturation
-            saturation = 1.0 + 0.3 * np.sin(time_factor * 2 * np.pi)
+            # Dynamic saturation - boost colors during organized phase
+            if expansion_end <= i < organized_end:
+                saturation = 1.0 + 0.4 * np.sin(time_factor * 2 * np.pi)
+            else:
+                saturation = 1.0 + 0.2 * np.sin(time_factor * 2 * np.pi)
+            
             enhancer = ImageEnhance.Color(frame_img)
             frame_img = enhancer.enhance(saturation)
             
-            # Dynamic contrast
-            contrast = 1.0 + 0.2 * np.cos(time_factor * 1.5 * np.pi)
+            # Dynamic contrast - increase drama during expansion
+            if i < expansion_end:
+                contrast = 1.0 + 0.6 * np.sin(time_factor * 3 * np.pi)
+            else:
+                contrast = 1.0 + 0.3 * np.cos(time_factor * 1.5 * np.pi)
+            
             enhancer = ImageEnhance.Contrast(frame_img)
             frame_img = enhancer.enhance(contrast)
             
@@ -483,26 +737,47 @@ def main():
             
             frames.append(frame_img)
         
-        print("✓ All frames generated")
+        print("✓ All frames generated successfully!")
+        print(f"🎞️ Total particles created: {len(processor.particle_system.particles) if processor.particle_system else 'N/A'}")
         
-        # Export with maximum quality
-        print(f"🎞️ Exporting premium video...")
-        clip = ImageSequenceClip([np.array(f) for f in frames], fps=30)
+        # Export with quality-based settings
+        print(f"🎞️ Exporting {ANIMATION_QUALITY} quality video...")
+        
+        # Quality settings
+        if ANIMATION_QUALITY == 'standard':
+            bitrate = "8000k"
+            crf = "18"
+        elif ANIMATION_QUALITY == 'high':
+            bitrate = "15000k"
+            crf = "14"
+        else:  # ultra
+            bitrate = "25000k"
+            crf = "10"
+        
+        clip = ImageSequenceClip([np.array(f) for f in frames], fps=fps)
         
         clip.write_videofile(
             OUTPUT_VIDEO,
             codec="libx264",
             audio=False,
-            bitrate="12000k",  # Very high bitrate
-            ffmpeg_params=["-crf", "15", "-preset", "slow"]  # Maximum quality
+            bitrate=bitrate,
+            ffmpeg_params=["-crf", crf, "-preset", "slow"]
         )
         
-        print(f"🌟 Gallery-quality video created: {OUTPUT_VIDEO}")
-        print(f"🎯 Style: {ARTISTIC_STYLE} | Duration: 8.0s | Quality: Premium")
-        print(f"✨ Particle Effect: Colors floating off canvas in 3D!")
+        print(f"🌟 REVOLUTIONARY particle animation created: {OUTPUT_VIDEO}")
+        print(f"🎯 Settings: {ANIMATION_DURATION}s | {ANIMATION_QUALITY} quality | {ARTISTIC_STYLE} style")
+        print(f"✨ VIBRANT PARTICLE TRANSFORMATION:")
+        print(f"   🎨 Entire painting converted to bright, colorful particles")
+        print(f"   🚀 Particles explode beyond canvas boundaries")
+        print(f"   🌀 Organized formations: spirals, orbits, waves")
+        print(f"   🏠 Perfect return to original positions AS PARTICLES")
+        print(f"   💫 Three-phase animation with vibrant colors throughout!")
+        print(f"   🌈 Colors never fade - particles stay bright and beautiful!")
         
     except Exception as e:
         print(f"❌ Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 if __name__ == "__main__":
