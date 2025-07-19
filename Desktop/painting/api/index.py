@@ -184,12 +184,12 @@ def status():
         'version': '2.0'
     })
 
-# Ensure directories exist
-os.makedirs('templates', exist_ok=True)
-os.makedirs('static', exist_ok=True)
-
 # For local development
 if __name__ == '__main__':
+    # Ensure directories exist for local testing
+    os.makedirs('templates', exist_ok=True)
+    os.makedirs('static', exist_ok=True)
+    
     print("🎨 Makart Particle Animation Studio")
     print("🌐 Starting Flask server...")
     print("🚀 Visit: http://localhost:5001")
