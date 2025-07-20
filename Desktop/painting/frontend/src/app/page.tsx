@@ -22,10 +22,9 @@ export default function Home() {
     if (!file) return;
     setStatus('Uploading...');
     try {
-      const response = await uploadFile(file, options, setProgress);
+      const blob = await uploadFile(file, options, setProgress);
       setStatus('Processing...');
       // Handle the downloaded file
-      const blob = new Blob([response.data], { type: 'video/mp4' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

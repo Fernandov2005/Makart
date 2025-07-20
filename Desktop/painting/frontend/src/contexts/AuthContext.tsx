@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const verifySession = async () => {
       try {
-        const { data } = await checkSession();
+        const data = await checkSession();
         if (data.logged_in) {
           setIsAuthenticated(true);
           setUser({ email: data.email });
@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const { data } = await apiLogin(email, password);
+    const data = await apiLogin(email, password);
     setIsAuthenticated(true);
     setUser({ email: data.email });
   };
