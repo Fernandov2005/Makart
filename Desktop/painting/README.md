@@ -1,72 +1,54 @@
 # Makart - Particle Animation Studio
 
-Transform your paintings into breathtaking particle animations with stunning glassmorphism design and futuristic effects.
+This project is a high-performance particle animation studio with a split front-end/back-end architecture.
+
+- **Frontend**: Next.js 14, React, Tailwind CSS, deployed on Vercel.
+- **Backend**: Python, Flask, Gunicorn, deployed on Render/Railway.
 
 ## ✨ Features
 
-- **🎨 Particle Transformation**: Convert any painting into mesmerizing particle animations
-- **🌟 Glassmorphism Design**: Beautiful white background with subtle glass effects
-- **⚙️ Customizable Settings**: Duration, quality, and animation styles
-- **🔐 Secure Login**: Protected access with session management
-- **📱 Responsive Design**: Works perfectly on all devices
-- **⚡ High Performance**: Optimized for fast processing and downloads
-
-## 🎯 Animation Styles
-
-- **Particle Powder**: Classic particle dispersion and return
-- **Ethereal Dreams**: Dreamy floating particle movements  
-- **Cyberpunk Neon**: Futuristic neon-style particles
-- **Impressionist Art**: Artistic brushstroke-like particles
-- **Abstract Geometry**: Geometric particle patterns
+- **🎨 Particle Transformation**: Convert any painting into mesmerizing particle animations.
+- **🌟 Glassmorphism Design**: Modern UI with white backgrounds and subtle glass effects.
+- **🔐 Secure Authentication**: JWT-based authentication with a secure Flask backend.
+- **🚀 Scalable Architecture**: Split front-end and back-end for better performance and scalability.
+- **📱 Responsive Design**: Works perfectly on all devices.
 
 ## 🚀 Quick Start
 
-### Login Credentials
-- **Email**: `olimpia@makincome.com`
-- **Password**: `Chanel2808`
+### Frontend (Vercel)
 
-### Upload & Transform
-1. Log in with the credentials above
-2. Select your animation preferences (duration, quality, style)
-3. Upload your painting (JPG, PNG, GIF, BMP, TIFF, WebP)
-4. Click "✨ Create Particle Animation"
-5. Download your spectacular video!
+1.  Navigate to the `frontend` directory: `cd frontend`
+2.  Install dependencies: `npm install`
+3.  Run the development server: `npm run dev`
+4.  Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-## 🛠️ Technical Details
+### Backend (Render/Railway)
 
-- **Backend**: Python Flask with advanced image processing
-- **Frontend**: Pure HTML/CSS/JavaScript with glassmorphism effects
-- **Animation Engine**: Custom particle system with physics simulation
-- **Video Output**: High-quality MP4 with configurable bitrates
-- **Deployment**: Optimized for Vercel serverless functions
+1.  Navigate to the `backend` directory: `cd backend`
+2.  Create and activate a virtual environment:
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+3.  Install dependencies: `pip install -r requirements.txt`
+4.  Run the development server: `gunicorn 'api.index:app'`
+5.  The backend will be running at [http://localhost:8000](http://localhost:8000).
 
-## 🎨 Design Philosophy
+## 🛠️ Deployment
 
-- **Clean Minimalism**: White backgrounds with subtle glassmorphism
-- **User Experience**: Intuitive drag-and-drop with real-time feedback
-- **Professional Aesthetics**: Corporate-grade design with modern touches
-- **Performance First**: Optimized animations and efficient processing
+### Frontend (Vercel)
 
-## 📋 Supported Formats
+-   Connect your GitHub repository to Vercel.
+-   Set the root directory to `frontend`.
+-   Vercel will automatically detect the Next.js app and deploy it.
 
-- **Input**: JPG, PNG, GIF, BMP, TIFF, WebP (max 16MB)
-- **Output**: MP4 video with customizable quality settings
-- **Recommended**: High-resolution images for best results
+### Backend (Render/Railway)
 
-## ⚡ Performance Options
-
-- **Standard**: Fast processing, good quality
-- **High Quality**: Balanced speed and quality
-- **Ultra Premium**: Maximum quality, longer processing
-
-## 🔧 Development
-
-Built with modern web technologies:
-- Flask web framework
-- Advanced computer vision algorithms
-- Real-time progress tracking
-- Secure file handling
-- Optimized video encoding
+-   Connect your GitHub repository to Render or Railway.
+-   Set the root directory to `backend`.
+-   Use the following settings:
+    -   **Build Command**: `pip install -r requirements.txt`
+    -   **Start Command**: `gunicorn 'api.index:app'`
 
 ## 📄 License
 
