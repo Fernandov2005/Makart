@@ -11,8 +11,12 @@ from functools import wraps
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a_secure_secret_key')
 
-# Configure CORS
-CORS(app, resources={r"/api/*": {"origins": "https://makart.vercel.app"}}, supports_credentials=True)
+# Configure CORS to be more robust
+CORS(app, 
+     origins=["https://makart.vercel.app"], 
+     methods=["GET", "POST", "OPTIONS"], 
+     headers=["Content-Type"], 
+     supports_credentials=True)
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp'}
 VALID_EMAIL = "olimpia@makincome.com"
