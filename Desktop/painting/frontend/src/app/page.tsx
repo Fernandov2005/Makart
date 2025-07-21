@@ -113,10 +113,14 @@ export default function Home() {
       const response = await uploadFile(file, options, setProgress);
       setStatus('Animation complete!');
       setResult(response);
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error('Upload error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(errorMessage || 'Something went wrong. Please try again.');
+      const errorMessage = err?.message || 'Unknown error occurred.';
+      let details = '';
+      if (err?.details) details += `\nDetails: ${err.details}`;
+      if (err?.stack) details += `\nStack: ${err.stack}`;
+      if (err?.headers) details += `\nHeaders: ${JSON.stringify(err.headers)}`;
+      setError(errorMessage + details);
       setStatus('');
     } finally {
       setIsProcessing(false);

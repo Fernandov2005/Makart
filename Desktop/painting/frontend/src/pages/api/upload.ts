@@ -29,6 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   console.log('Upload request received:', {
     contentType: req.headers['content-type'],
     contentLength: req.headers['content-length'],
+    headers: req.headers,
   });
 
   try {
@@ -112,7 +113,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     
     return res.status(500).json({ 
-      error: 'Server error. Please try again.' 
+      error: 'Server error. Please try again.',
+      details: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      headers: req.headers,
     });
   }
 } 
