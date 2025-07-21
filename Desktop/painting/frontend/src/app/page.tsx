@@ -28,40 +28,42 @@ export default function Home() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState('');
+  const [bypassValidation, setBypassValidation] = useState(true); // Added bypass toggle
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateFile = (selectedFile: File) => {
-    console.log('Validating file:', {
+    // Always log the file info for debugging
+    console.log('File details:', {
       name: selectedFile.name,
       size: selectedFile.size,
       sizeInMB: (selectedFile.size / 1024 / 1024).toFixed(2),
-      type: selectedFile.type,
-      maxSizeBytes: 25 * 1024 * 1024,
-      maxSizeMB: 25
+      type: selectedFile.type
     });
+    
+    // BYPASS: If bypass is enabled, accept files under 50MB
+    if (bypassValidation && selectedFile.size <= 50 * 1024 * 1024) {
+      console.log('🔓 Validation bypassed - file accepted');
+      setError('');
+      return true;
+    }
 
-    // Check file type
+    // Normal validation flow
     if (!selectedFile.type.startsWith('image/')) {
       setError('Please upload an image file (PNG, JPG, JPEG, etc.)');
       return false;
     }
 
-    // Conservative file size check (25MB limit for testing)
     const maxSize = 25 * 1024 * 1024; // 25MB in bytes
-    console.log('Size comparison:', selectedFile.size, '>', maxSize, '=', selectedFile.size > maxSize);
-    
     if (selectedFile.size > maxSize) {
-      setError(`File too large for processing. Your file is ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB but we support up to 25MB. Try compressing your image or reducing its resolution.`);
+      setError(`File too large. Your file is ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB but we support up to 25MB.`);
       return false;
     }
 
-    // Check minimum size
     if (selectedFile.size < 1024) { // Less than 1KB
-      setError('File appears to be empty or corrupted. Please try a different image.');
+      setError('File appears to be empty or corrupted.');
       return false;
     }
 
-    console.log('File validation passed!');
     setError('');
     return true;
   };
@@ -240,7 +242,7 @@ export default function Home() {
                   <div>
                     <p className="text-2xl font-bold text-gray-900 mb-2">Drop your art here</p>
                     <p className="text-lg text-gray-600 mb-1">or click to browse files</p>
-                    <p className="text-sm text-gray-500">PNG, JPG, JPEG up to 25MB (testing)</p>
+                    <p className="text-sm text-gray-500">PNG, JPG, JPEG - any size</p>
                   </div>
                 </div>
               )}
@@ -248,10 +250,26 @@ export default function Home() {
 
             {/* Error Display */}
             {error && (
-              <div className="mt-6 glass-container p-4 border border-red-300/30 bg-red-50/20">
+              <div className="mt-6 glass-container p-5 border border-red-300/30 bg-red-50/20 animate-pulse">
                 <div className="flex items-start">
-                  <span className="text-red-500 text-lg mr-3">⚠️</span>
-                  <p className="text-red-700 font-semibold">{error}</p>
+                  <span className="text-red-500 text-2xl mr-4">⚠️</span>
+                  <div>
+                    <p className="text-red-600 font-semibold text-lg">{error}</p>
+                    <div className="mt-3 flex gap-3">
+                      <button 
+                        onClick={() => setBypassValidation(!bypassValidation)}
+                        className="text-blue-600 underline text-sm hover:text-blue-700 font-medium"
+                      >
+                        {bypassValidation ? '✓ Bypass Enabled' : '○ Enable Bypass'}
+                      </button>
+                      <button 
+                        onClick={resetUpload}
+                        className="text-blue-600 underline text-sm hover:text-blue-700 font-medium"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

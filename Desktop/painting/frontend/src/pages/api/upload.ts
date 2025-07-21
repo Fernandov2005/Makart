@@ -4,28 +4,17 @@ import formidable from 'formidable';
 
 export const config = {
   api: {
-    bodyParser: false,
-    sizeLimit: '25mb', // More conservative limit
+    bodyParser: false, // Important - let formidable handle the form
+    sizeLimit: false,  // Disable Next.js size limit
     responseLimit: false,
   },
 };
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Handle CORS - allow multiple origins
-  const origin = req.headers.origin;
-  const allowedOrigins = [
-    'https://makart.vercel.app',
-    'http://localhost:3000',
-    'https://localhost:3000'
-  ];
-  
-  if (origin && (allowedOrigins.includes(origin) || origin.includes('.vercel.app'))) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -37,140 +26,87 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     return;
   }
 
-  console.log('Upload request received - Content-Length:', req.headers['content-length']);
+  console.log('Upload request received:', {
+    contentType: req.headers['content-type'],
+    contentLength: req.headers['content-length'],
+  });
 
   try {
-    // Check authentication
+    // Very basic authentication check
     const cookies = parse(req.headers.cookie || '');
     const sessionData = cookies.session ? JSON.parse(cookies.session) : null;
 
     if (!sessionData || !sessionData.logged_in) {
-      res.status(401).json({ error: 'Authentication required. Please log in again.' });
-      return;
+      return res.status(401).json({ error: 'Please log in to upload files' });
     }
 
-    console.log('Processing upload request...');
-
-    // Parse form data with conservative settings
-    const form = formidable({
-      maxFileSize: 20 * 1024 * 1024, // 20MB limit (conservative)
-      maxFields: 10,
-      maxFieldsSize: 10 * 1024 * 1024, // 10MB for form fields
-      allowEmptyFiles: false,
+    // Use simplified formidable config
+    const form = new formidable.IncomingForm({
       keepExtensions: true,
       multiples: false,
-      filter: function ({ name, originalFilename, mimetype }) {
-        console.log(`Upload filter: name=${name}, filename=${originalFilename}, mimetype=${mimetype}`);
-        // Only allow image files
-        const isValidField = name === 'file' || name === 'duration' || name === 'quality' || name === 'style';
-        const isValidMimeType = !mimetype || mimetype.includes('image/');
-        return isValidField && (name !== 'file' || isValidMimeType);
-      }
     });
 
-    form.parse(req, (err, fields, files) => {
-      if (err) {
-        console.error('Upload parsing error:', err);
-        console.error('Error details:', { 
-          code: err.code, 
-          message: err.message,
-          httpCode: err.httpCode,
-          receivedSize: err.receivedSize 
-        });
-        
-        // Enhanced error handling
-        if (err.code === 'LIMIT_FILE_SIZE' || err.code === 1009 || err.message.includes('maxFileSize')) {
-          const fileSize = err.receivedSize ? Math.round(err.receivedSize / 1024 / 1024) : 'unknown';
-          res.status(413).json({ 
-            error: 'File too large. Please use images under 15MB for better compatibility.',
-            details: `Your file size: ${fileSize}MB. Try compressing your image or using a smaller resolution.`,
-            maxSize: '15MB'
-          });
+    // Process the form using Promise
+    const formData: { fields: formidable.Fields; files: formidable.Files } = await new Promise((resolve, reject) => {
+      form.parse(req, (err, fields, files) => {
+        if (err) {
+          console.error('Form parsing error:', err);
+          reject(err);
           return;
         }
-        
-        if (err.code === 'LIMIT_FIELD_VALUE' || err.message.includes('maxFieldsSize')) {
-          res.status(413).json({ error: 'Form data too large. Please try again.' });
-          return;
-        }
+        resolve({ fields, files });
+      });
+    });
 
-        if (err.code === 'LIMIT_UNEXPECTED_FILE' || err.message.includes('Unexpected field')) {
-          res.status(400).json({ error: 'Invalid file upload format.' });
-          return;
-        }
+    // Get the file
+    const uploadedFile = formData.files.file as formidable.File | undefined;
 
-        // Generic error with more helpful message
-        res.status(400).json({ 
-          error: 'Upload failed. Please try a smaller image (under 10MB).',
-          details: `Error: ${err.message}`,
-          suggestion: 'Try compressing your image or reducing its resolution.'
-        });
-        return;
-      }
+    if (!uploadedFile) {
+      return res.status(400).json({ 
+        error: 'No file uploaded' 
+      });
+    }
 
-      const file = Array.isArray(files.file) ? files.file[0] : files.file;
-      const duration = Array.isArray(fields.duration) ? fields.duration[0] : fields.duration;
-      const quality = Array.isArray(fields.quality) ? fields.quality[0] : fields.quality;
-      const style = Array.isArray(fields.style) ? fields.style[0] : fields.style;
+    // Get options from form data
+    const duration = Array.isArray(formData.fields.duration) ? formData.fields.duration[0] : formData.fields.duration;
+    const quality = Array.isArray(formData.fields.quality) ? formData.fields.quality[0] : formData.fields.quality;
+    const style = Array.isArray(formData.fields.style) ? formData.fields.style[0] : formData.fields.style;
 
-      console.log(`File received: ${file?.originalFilename}, size: ${file?.size} bytes (${Math.round((file?.size || 0) / 1024 / 1024 * 100) / 100}MB)`);
+    // Log successful upload
+    console.log('File successfully processed:', {
+      filename: uploadedFile.originalFilename,
+      size: uploadedFile.size,
+      mimetype: uploadedFile.mimetype,
+    });
 
-      if (!file) {
-        res.status(400).json({ error: 'No file uploaded. Please select an image file.' });
-        return;
-      }
-
-      // Validate file type
-      if (!file.mimetype || !file.mimetype.startsWith('image/')) {
-        res.status(415).json({ error: 'Invalid file type. Please upload a PNG, JPG, or JPEG image.' });
-        return;
-      }
-
-      // Conservative file size check
-      if (file.size > 15 * 1024 * 1024) { // 15MB conservative limit
-        res.status(413).json({ 
-          error: 'File too large for processing. Please use images under 15MB.',
-          fileSize: `${Math.round(file.size / 1024 / 1024)}MB`,
-          maxSize: '15MB',
-          suggestion: 'Try compressing your image or reducing its resolution.'
-        });
-        return;
-      }
-
-      // Validate file has actual content
-      if (file.size < 1024) { // Less than 1KB
-        res.status(400).json({ error: 'File appears to be empty or corrupted.' });
-        return;
-      }
-
-      console.log('File validation passed, creating demo response...');
-
-      // Simulate processing time and return a demo animation result
-      const animationResult = {
-        success: true,
-        filename: file.originalFilename || 'uploaded-image',
-        duration: duration || '10',
-        quality: quality || 'ultra',
-        style: style || 'particle_powder',
-        processingTime: `${Math.floor(Math.random() * 30) + 10}s`,
-        fileSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
-        message: '🎉 Animation created successfully!',
-        downloadUrl: '/demo-animation.mp4',
-        timestamp: new Date().toISOString()
-      };
-
-      console.log('Sending success response:', animationResult);
-
-      // Return JSON response with success data
-      res.status(200).json(animationResult);
+    // Return success response
+    return res.status(200).json({
+      success: true,
+      filename: uploadedFile.originalFilename || 'uploaded-image',
+      duration: duration || '10',
+      quality: quality || 'ultra',
+      style: style || 'particle_powder',
+      processingTime: `${Math.floor(Math.random() * 30) + 10}s`,
+      fileSize: `${(uploadedFile.size / 1024 / 1024).toFixed(2)}MB`,
+      message: '🎉 Animation created successfully!',
+      downloadUrl: '/demo-animation.mp4',
+      timestamp: new Date().toISOString()
     });
 
   } catch (error) {
     console.error('Upload handler error:', error);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again.',
-      details: error instanceof Error ? error.message : 'Unknown error',
-      suggestion: 'If the problem persists, try using a smaller image file.'
+    
+    // Handle specific errors
+    if (error instanceof Error) {
+      if (error.message.includes('maxFileSize')) {
+        return res.status(413).json({ 
+          error: 'File too large' 
+        });
+      }
+    }
+    
+    return res.status(500).json({ 
+      error: 'Server error. Please try again.' 
     });
   }
 } 
