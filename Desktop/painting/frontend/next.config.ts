@@ -7,11 +7,6 @@ const nextConfig: NextConfig = {
   images: {
     formats: ['image/webp', 'image/avif'],
   },
-  
-  // Enable experimental features for better file upload handling
-  experimental: {
-    serverComponentsExternalPackages: ['formidable'],
-  },
 };
 
 export default nextConfig;

@@ -116,10 +116,6 @@ export default function Home() {
     } catch (err: unknown) {
       console.error('Upload error:', err);
       let errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      // Try to extract debug info if present
-      if (err instanceof Error && (err as any).debug) {
-        errorMessage += '\nDebug: ' + JSON.stringify((err as any).debug);
-      }
       setError(errorMessage || 'Something went wrong. Please try again.');
       setStatus('');
     } finally {
