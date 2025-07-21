@@ -5,7 +5,7 @@ import formidable from 'formidable';
 export const config = {
   api: {
     bodyParser: false,
-    sizeLimit: '60mb', // Increased size limit with buffer
+    sizeLimit: '25mb', // More conservative limit
     responseLimit: false,
   },
 };
@@ -37,6 +37,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     return;
   }
 
+  console.log('Upload request received - Content-Length:', req.headers['content-length']);
+
   try {
     // Check authentication
     const cookies = parse(req.headers.cookie || '');
@@ -49,11 +51,11 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
     console.log('Processing upload request...');
 
-    // Parse form data with enhanced settings
+    // Parse form data with conservative settings
     const form = formidable({
-      maxFileSize: 60 * 1024 * 1024, // 60MB limit with buffer
+      maxFileSize: 20 * 1024 * 1024, // 20MB limit (conservative)
       maxFields: 10,
-      maxFieldsSize: 20 * 1024 * 1024, // 20MB for form fields
+      maxFieldsSize: 10 * 1024 * 1024, // 10MB for form fields
       allowEmptyFiles: false,
       keepExtensions: true,
       multiples: false,
@@ -69,12 +71,20 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     form.parse(req, (err, fields, files) => {
       if (err) {
         console.error('Upload parsing error:', err);
+        console.error('Error details:', { 
+          code: err.code, 
+          message: err.message,
+          httpCode: err.httpCode,
+          receivedSize: err.receivedSize 
+        });
         
         // Enhanced error handling
-        if (err.code === 'LIMIT_FILE_SIZE' || err.message.includes('maxFileSize')) {
+        if (err.code === 'LIMIT_FILE_SIZE' || err.code === 1009 || err.message.includes('maxFileSize')) {
+          const fileSize = err.receivedSize ? Math.round(err.receivedSize / 1024 / 1024) : 'unknown';
           res.status(413).json({ 
-            error: 'File too large. Maximum size is 50MB.',
-            details: `Your file size: ${err.receivedSize ? Math.round(err.receivedSize / 1024 / 1024) : 'unknown'}MB` 
+            error: 'File too large. Please use images under 15MB for better compatibility.',
+            details: `Your file size: ${fileSize}MB. Try compressing your image or using a smaller resolution.`,
+            maxSize: '15MB'
           });
           return;
         }
@@ -89,10 +99,11 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
           return;
         }
 
-        // Generic error
+        // Generic error with more helpful message
         res.status(400).json({ 
-          error: 'Failed to process upload. Please try again.',
-          details: err.message 
+          error: 'Upload failed. Please try a smaller image (under 10MB).',
+          details: `Error: ${err.message}`,
+          suggestion: 'Try compressing your image or reducing its resolution.'
         });
         return;
       }
@@ -102,7 +113,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       const quality = Array.isArray(fields.quality) ? fields.quality[0] : fields.quality;
       const style = Array.isArray(fields.style) ? fields.style[0] : fields.style;
 
-      console.log(`File received: ${file?.originalFilename}, size: ${file?.size} bytes`);
+      console.log(`File received: ${file?.originalFilename}, size: ${file?.size} bytes (${Math.round((file?.size || 0) / 1024 / 1024 * 100) / 100}MB)`);
 
       if (!file) {
         res.status(400).json({ error: 'No file uploaded. Please select an image file.' });
@@ -115,11 +126,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         return;
       }
 
-      // Check file size on our end too (with some buffer)
-      if (file.size > 55 * 1024 * 1024) {
+      // Conservative file size check
+      if (file.size > 15 * 1024 * 1024) { // 15MB conservative limit
         res.status(413).json({ 
-          error: 'File too large. Maximum size is 50MB.',
-          fileSize: `${Math.round(file.size / 1024 / 1024)}MB`
+          error: 'File too large for processing. Please use images under 15MB.',
+          fileSize: `${Math.round(file.size / 1024 / 1024)}MB`,
+          maxSize: '15MB',
+          suggestion: 'Try compressing your image or reducing its resolution.'
         });
         return;
       }
@@ -156,7 +169,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     console.error('Upload handler error:', error);
     res.status(500).json({ 
       error: 'Internal server error. Please try again.',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
+      suggestion: 'If the problem persists, try using a smaller image file.'
     });
   }
 } 

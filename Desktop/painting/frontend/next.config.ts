@@ -2,13 +2,15 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ['formidable'],
-  // Increase body size limits for file uploads
-  serverRuntimeConfig: {
-    maxFileSize: '50mb',
-  },
+  
   // Enable image optimization
   images: {
     formats: ['image/webp', 'image/avif'],
+  },
+  
+  // Enable experimental features for better file upload handling
+  experimental: {
+    serverComponentsExternalPackages: ['formidable'],
   },
 };
 

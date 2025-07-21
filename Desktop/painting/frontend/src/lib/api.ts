@@ -70,9 +70,9 @@ interface UploadOptions {
 }
 
 export const uploadFile = async (file: File, options: UploadOptions, onUploadProgress: (progress: number) => void) => {
-  // Validate file before upload
-  if (file.size > 50 * 1024 * 1024) {
-    throw new Error('File too large. Maximum size is 50MB.');
+  // Conservative file validation before upload
+  if (file.size > 15 * 1024 * 1024) {
+    throw new Error(`File too large for processing. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB but we support up to 15MB. Try compressing your image or reducing its resolution.`);
   }
 
   const formData = new FormData();
@@ -118,10 +118,15 @@ export const uploadFile = async (file: File, options: UploadOptions, onUploadPro
       try {
         const errorData = await response.json();
         errorMessage = errorData.error || errorMessage;
+        
+        // Add additional context from server response
+        if (errorData.suggestion) {
+          errorMessage += ` ${errorData.suggestion}`;
+        }
       } catch {
         // Enhanced error handling based on status codes
         if (response.status === 413) {
-          errorMessage = 'File too large. Please choose a smaller image (max 50MB).';
+          errorMessage = 'File too large for processing. Please use images under 15MB. Try compressing your image or reducing its resolution.';
         } else if (response.status === 500) {
           errorMessage = 'Server error during upload. Please try again.';
         } else if (response.status === 401) {
@@ -133,7 +138,7 @@ export const uploadFile = async (file: File, options: UploadOptions, onUploadPro
         } else if (response.status === 0) {
           errorMessage = 'Network error. Please check your connection.';
         } else {
-          errorMessage = `Upload failed (Error ${response.status}). Please try again.`;
+          errorMessage = `Upload failed (Error ${response.status}). Please try again with a smaller image file.`;
         }
       }
       
@@ -157,6 +162,6 @@ export const uploadFile = async (file: File, options: UploadOptions, onUploadPro
       throw error;
     }
     
-    throw new Error('Upload failed. Please try again.');
+    throw new Error('Upload failed. Please try again with a smaller image file.');
   }
 }; 

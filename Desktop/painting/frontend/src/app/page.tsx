@@ -37,10 +37,16 @@ export default function Home() {
       return false;
     }
 
-    // Check file size (50MB limit)
-    const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+    // Conservative file size check (15MB limit for better compatibility)
+    const maxSize = 15 * 1024 * 1024; // 15MB in bytes
     if (selectedFile.size > maxSize) {
-      setError(`File too large. Maximum size is 50MB. Your file is ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB.`);
+      setError(`File too large for processing. Your file is ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB but we support up to 15MB. Try compressing your image or reducing its resolution.`);
+      return false;
+    }
+
+    // Check minimum size
+    if (selectedFile.size < 1024) { // Less than 1KB
+      setError('File appears to be empty or corrupted. Please try a different image.');
       return false;
     }
 
@@ -96,10 +102,14 @@ export default function Home() {
     } catch (err: unknown) {
       console.error('Upload error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      if (errorMessage.includes('413') || errorMessage.includes('too large')) {
-        setError('File too large. Please choose a smaller image (max 50MB).');
+      if (errorMessage.includes('413') || errorMessage.includes('too large') || errorMessage.includes('large')) {
+        setError('File too large for processing. Please use images under 15MB. Try compressing your image or reducing its resolution.');
+      } else if (errorMessage.includes('timeout')) {
+        setError('Upload timeout. Please try again or use a smaller file.');
+      } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
+        setError('Network error. Please check your connection and try again.');
       } else {
-        setError('Something went wrong. Please try again.');
+        setError(errorMessage || 'Something went wrong. Please try again with a smaller image file.');
       }
       setStatus('');
     } finally {
@@ -220,7 +230,7 @@ export default function Home() {
                   <div>
                     <p className="text-2xl font-bold text-gray-900 mb-2">Drop your art here</p>
                     <p className="text-lg text-gray-600 mb-1">or click to browse files</p>
-                    <p className="text-sm text-gray-500">PNG, JPG, JPEG up to 50MB</p>
+                    <p className="text-sm text-gray-500">PNG, JPG, JPEG up to 15MB</p>
                   </div>
                 </div>
               )}
