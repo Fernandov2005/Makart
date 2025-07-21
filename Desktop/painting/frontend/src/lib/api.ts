@@ -54,30 +54,21 @@ export const uploadFile = async (file: File, options: UploadOptions, onUploadPro
   formData.append('quality', options.quality);
   formData.append('style', options.style);
 
-  // Note: onUploadProgress is not directly supported by fetch.
-  // A more advanced implementation would use XMLHttpRequest or a library like `axios-fetch-adapter`.
-  // For now, we will simulate the progress.
-  onUploadProgress(50); // Simulate 50% progress
+  // Simulate upload progress
+  onUploadProgress(30);
   const response = await fetch(`${API_URL}/upload`, {
     method: 'POST',
     body: formData,
-    credentials: 'include', // Ensure cookies are sent with the upload request
+    credentials: 'include',
   });
-  onUploadProgress(100); // Simulate 100% progress
+  onUploadProgress(100);
   
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.error || 'Upload failed');
   }
   
-  // Check if we got a demo response (status 202) instead of a file
-  if (response.status === 202) {
-    const demoData = await response.json();
-    // Return a demo blob or handle demo mode
-    const demoMessage = `Demo Mode: ${demoData.message}\n\nFile: ${demoData.filename}\nDuration: ${demoData.duration}s\nQuality: ${demoData.quality}\nStyle: ${demoData.style}`;
-    const blob = new Blob([demoMessage], { type: 'text/plain' });
-    return blob;
-  }
-  
-  return response.blob();
+  // Parse the JSON response
+  const result = await response.json();
+  return result;
 }; 

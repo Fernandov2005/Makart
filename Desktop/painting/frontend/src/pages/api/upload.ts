@@ -1,5 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { parse } from 'cookie';
+import formidable from 'formidable';
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   // Handle CORS - allow multiple origins
@@ -38,11 +45,41 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       return;
     }
 
-    // For demo purposes, return success (file processing will be added later)
-    res.status(200).json({
-      message: 'File upload endpoint ready! Animation processing will be available soon.',
-      status: 'received'
+    // Parse form data
+    const form = formidable({});
+    form.parse(req, (err, fields, files) => {
+      if (err) {
+        res.status(500).json({ error: 'Failed to parse upload' });
+        return;
+      }
+
+      const file = Array.isArray(files.file) ? files.file[0] : files.file;
+      const duration = Array.isArray(fields.duration) ? fields.duration[0] : fields.duration;
+      const quality = Array.isArray(fields.quality) ? fields.quality[0] : fields.quality;
+      const style = Array.isArray(fields.style) ? fields.style[0] : fields.style;
+
+      if (!file) {
+        res.status(400).json({ error: 'No file uploaded' });
+        return;
+      }
+
+      // Simulate processing and return a demo animation result
+      const animationResult = {
+        success: true,
+        filename: file.originalFilename || 'uploaded-image',
+        duration: duration || '10',
+        quality: quality || 'ultra',
+        style: style || 'particle_powder',
+        processingTime: `${Math.floor(Math.random() * 30) + 10}s`,
+        fileSize: `${(file.size || 0 / 1024 / 1024).toFixed(2)}MB`,
+        message: '🎉 Animation created successfully! (Demo mode)',
+        downloadUrl: '/demo-animation.mp4'
+      };
+
+      // Return JSON response with success data
+      res.status(200).json(animationResult);
     });
+
   } catch (error) {
     res.status(500).json({ error: 'Upload failed' });
   }

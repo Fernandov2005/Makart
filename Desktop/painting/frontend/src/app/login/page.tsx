@@ -33,12 +33,9 @@ export default function LoginPage() {
     setError('');
     
     try {
-      console.log('Submitting login form');
       await login(email, password);
-      console.log('Login completed, redirecting...');
       router.push('/');
     } catch (err) {
-      console.error('Login form error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Login failed';
       setError(errorMessage);
     } finally {
@@ -48,90 +45,131 @@ export default function LoginPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+        <div className="text-center bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-12">
+          <Image src="/logo-handshake.png" alt="Makart Logo" width={80} height={80} className="mx-auto mb-6 rounded-full" />
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading Makart Studio...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white/70 backdrop-blur-xl rounded-2xl shadow-2xl">
-        <div className="text-center">
-          <Image src="/logo-handshake.png" alt="Makart Logo" width={100} height={100} className="mx-auto" />
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Welcome to Makart
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Particle Animation Studio
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 px-4">
+      <div className="w-full max-w-md">
+        {/* Logo and Branding */}
+        <div className="text-center mb-8">
+          <Image src="/logo-handshake.png" alt="Makart Logo" width={120} height={120} className="mx-auto mb-6 rounded-full shadow-lg" />
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            Makart Studio
+          </h1>
+          <p className="text-lg text-gray-600">
+            Particle Animation Platform
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                disabled={isSubmitting}
-                className="relative block w-full px-3 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-none appearance-none rounded-t-md focus:outline-none focus:ring-brand-purple focus:border-brand-purple focus:z-10 sm:text-sm disabled:opacity-50"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                disabled={isSubmitting}
-                className="relative block w-full px-3 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-none appearance-none rounded-b-md focus:outline-none focus:ring-brand-purple focus:border-brand-purple focus:z-10 sm:text-sm disabled:opacity-50"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+
+        {/* Login Form */}
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/20">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Welcome Back
+            </h2>
+            <p className="text-gray-600">
+              Sign in to transform your art into magic
+            </p>
           </div>
-          
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-600">{error}</div>
-              {error.includes('Unable to connect') && (
-                <div className="text-xs text-red-500 mt-1">
-                  The server may be starting up. Please wait a moment and try again.
-                </div>
-              )}
+
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  disabled={isSubmitting}
+                  className="w-full px-4 py-3 text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:opacity-50"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  disabled={isSubmitting}
+                  className="w-full px-4 py-3 text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:opacity-50"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
             </div>
-          )}
-          
-          <div>
+            
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm text-red-600 font-medium">{error}</p>
+                    {error.includes('Unable to connect') && (
+                      <p className="text-xs text-red-500 mt-1">
+                        The server may be starting up. Please wait a moment and try again.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <button
               type="submit"
               disabled={isSubmitting}
-              className="relative flex justify-center w-full px-4 py-2 text-sm font-medium text-white border border-transparent rounded-md group bg-brand-purple hover:bg-brand-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-purple disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isSubmitting ? (
-                <>
+                <div className="flex items-center justify-center">
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Signing in...
-                </>
+                  Signing you in...
+                </div>
               ) : (
-                'Sign in'
+                '✨ Sign In to Create Magic'
               )}
             </button>
+          </form>
+
+          {/* Footer */}
+          <div className="mt-8 text-center">
+            <p className="text-xs text-gray-500">
+              Transform your paintings into magical particle animations
+            </p>
           </div>
-        </form>
+        </div>
+
+        {/* Additional Info */}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-gray-600">
+            © 2024 Makart Studio - Bringing Art to Life
+          </p>
+        </div>
       </div>
     </div>
   );
