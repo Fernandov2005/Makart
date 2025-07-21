@@ -40,7 +40,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     } else {
       res.status(200).json({ logged_in: false });
     }
-  } catch (error) {
+  } catch (_error) {
     res.status(200).json({ logged_in: false });
   }
 } 

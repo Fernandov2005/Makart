@@ -7,8 +7,46 @@
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "/backend/api/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/frontend/$1"
+    }
+  ],
+  "functions": {
+    "frontend/src/pages/api/*.ts": {
+      "maxDuration": 30
+    },
+    "backend/api/*.py": {
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/backend/api/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
     }
   ]
 } 

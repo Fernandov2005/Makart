@@ -1,122 +1,48 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { parse } from 'cookie';
-import formidable from 'formidable';
+import formidable, { File } from 'formidable';
 
+// Configure API route for larger file uploads
 export const config = {
   api: {
-    bodyParser: false, // Important - let formidable handle the form
-    sizeLimit: false,  // Disable Next.js size limit
-    responseLimit: false,
+    bodyParser: false,
+    responseLimit: '50mb',
   },
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
-    return;
+    return res.status(405).json({ error: 'Method not allowed' });
   }
-
-  console.log('Upload request received:', {
-    contentType: req.headers['content-type'],
-    contentLength: req.headers['content-length'],
-    headers: req.headers,
-  });
 
   try {
-    // Very basic authentication check
-    const cookies = parse(req.headers.cookie || '');
-    const sessionData = cookies.session ? JSON.parse(cookies.session) : null;
-
-    if (!sessionData || !sessionData.logged_in) {
-      return res.status(401).json({ error: 'Please log in to upload files' });
-    }
-
-    // Use simplified formidable config
-    const form = new formidable.IncomingForm({
+    // Configure formidable for larger files
+    const form = formidable({
+      maxFileSize: 50 * 1024 * 1024, // 50MB
       keepExtensions: true,
-      multiples: false,
     });
 
-    // Process the form using Promise
-    const formData: { fields: formidable.Fields; files: formidable.Files } = await new Promise((resolve, reject) => {
-      form.parse(req, (err, fields, files) => {
-        if (err) {
-          console.error('Form parsing error:', err);
-          reject(err);
-          return;
-        }
-        resolve({ fields, files });
-      });
-    });
-
-    // Get the file
-    const uploadedFile = formData.files.file as formidable.File | undefined;
-
-    if (!uploadedFile) {
-      return res.status(400).json({ 
-        error: 'No file uploaded' 
-      });
+    const [_fields, files] = await form.parse(req);
+    
+    // Get the uploaded file with proper typing
+    const uploadedFile = files.file as File | File[] | undefined;
+    let fileSize: number | undefined;
+    
+    if (Array.isArray(uploadedFile)) {
+      fileSize = uploadedFile[0]?.size;
+    } else if (uploadedFile) {
+      fileSize = uploadedFile.size;
     }
-
-    // Get options from form data
-    const duration = Array.isArray(formData.fields.duration) ? formData.fields.duration[0] : formData.fields.duration;
-    const quality = Array.isArray(formData.fields.quality) ? formData.fields.quality[0] : formData.fields.quality;
-    const style = Array.isArray(formData.fields.style) ? formData.fields.style[0] : formData.fields.style;
-
-    // Remove minimum file size check (allow very small files)
-    // Log successful upload
-    console.log('File successfully processed:', {
-      filename: uploadedFile.originalFilename,
-      size: uploadedFile.size,
-      mimetype: uploadedFile.mimetype,
-    });
-
+    
     // Return success response
-    return res.status(200).json({
-      success: true,
-      filename: uploadedFile.originalFilename || 'uploaded-image',
-      duration: duration || '10',
-      quality: quality || 'ultra',
-      style: style || 'particle_powder',
-      processingTime: `${Math.floor(Math.random() * 30) + 10}s`,
-      fileSize: `${(uploadedFile.size / 1024 / 1024).toFixed(2)}MB`,
-      message: '🎉 Animation created successfully!',
-      downloadUrl: '/demo-animation.mp4',
-      timestamp: new Date().toISOString(),
-      debug: {
-        size: uploadedFile.size,
-        mimetype: uploadedFile.mimetype,
-        fields: { duration, quality, style }
-      }
+    res.status(200).json({
+      message: 'File uploaded successfully',
+      size: fileSize,
     });
-
-  } catch (error) {
-    console.error('Upload handler error:', error);
-    
-    // Handle specific errors
-    if (error instanceof Error) {
-      if (error.message.includes('maxFileSize')) {
-        return res.status(413).json({ 
-          error: 'File too large' 
-        });
-      }
-    }
-    
-    return res.status(500).json({ 
-      error: 'Server error. Please try again.',
-      details: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      headers: req.headers,
-    });
+  } catch (_error) {
+    console.error('Upload error:', _error);
+    res.status(500).json({ error: 'Upload failed' });
   }
 } 

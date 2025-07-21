@@ -47,15 +47,15 @@ export default function Home() {
       return true;
     }
 
-    // Normal validation flow
+    // Normal validation flow - increased to 50MB limit
     if (!selectedFile.type.startsWith('image/')) {
       setError('Please upload an image file (PNG, JPG, JPEG, etc.)');
       return false;
     }
 
-    const maxSize = 25 * 1024 * 1024; // 25MB in bytes
+    const maxSize = 50 * 1024 * 1024; // 50MB in bytes
     if (selectedFile.size > maxSize) {
-      setError(`File too large. Your file is ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB but we support up to 25MB.`);
+      setError(`File too large. Your file is ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB but we support up to 50MB. Try compressing your image or use a smaller resolution.`);
       return false;
     }
 
@@ -113,13 +113,14 @@ export default function Home() {
       const response = await uploadFile(file, options, setProgress);
       setStatus('Animation complete!');
       setResult(response);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Upload error:', err);
-      const errorMessage = err?.message || 'Unknown error occurred.';
+      const error = err as Error;
+      const errorMessage = error?.message || 'Unknown error occurred.';
       let details = '';
-      if (err?.details) details += `\nDetails: ${err.details}`;
-      if (err?.stack) details += `\nStack: ${err.stack}`;
-      if (err?.headers) details += `\nHeaders: ${JSON.stringify(err.headers)}`;
+      if ('details' in error && error.details) details += `\nDetails: ${error.details}`;
+      if ('stack' in error && error.stack) details += `\nStack: ${error.stack}`;
+      if ('headers' in error && error.headers) details += `\nHeaders: ${JSON.stringify(error.headers)}`;
       setError(errorMessage + details);
       setStatus('');
     } finally {
@@ -240,7 +241,7 @@ export default function Home() {
                   <div>
                     <p className="text-2xl font-bold text-gray-900 mb-2">Drop your art here</p>
                     <p className="text-lg text-gray-600 mb-1">or click to browse files</p>
-                    <p className="text-sm text-gray-500">PNG, JPG, JPEG - any size</p>
+                    <p className="text-sm text-gray-500">PNG, JPG, JPEG - up to 50MB</p>
                   </div>
                 </div>
               )}

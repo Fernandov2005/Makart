@@ -58,7 +58,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     } else {
       res.status(401).json({ error: 'Invalid credentials' });
     }
-  } catch (error) {
+  } catch (_error) {
     res.status(500).json({ error: 'Login failed' });
   }
 } 

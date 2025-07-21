@@ -121,7 +121,7 @@ export const uploadFile = async (file: File, options: UploadOptions, onUploadPro
         const errorData = await response.json();
         console.error('Error details:', errorData);
         throw new Error(errorData.error || 'Upload failed. Please try again.');
-      } catch (parseError) {
+      } catch (_parseError) {
         throw new Error('Upload failed. Please try again.');
       }
     }

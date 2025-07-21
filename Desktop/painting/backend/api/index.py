@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a_secure_secret_key')
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
 
 # Configure CORS to be more robust
 CORS(app, 

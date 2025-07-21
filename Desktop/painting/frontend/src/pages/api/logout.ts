@@ -40,7 +40,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
     res.setHeader('Set-Cookie', cookie);
     res.status(200).json({ message: 'Logout successful' });
-  } catch (error) {
+  } catch (_error) {
     res.status(500).json({ error: 'Logout failed' });
   }
 } 
