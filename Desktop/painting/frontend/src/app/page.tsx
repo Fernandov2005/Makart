@@ -120,37 +120,37 @@ export default function Home() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+      <div className="min-h-screen">
         {/* Header */}
-        <header className="bg-white/90 backdrop-blur-xl border-b border-purple-100 sticky top-0 z-50 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <header className="glass sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-6">
                 <div className="relative">
                   <Image 
                     src="/logo-handshake.png" 
                     alt="Makart Logo" 
-                    width={60} 
-                    height={60} 
-                    className="rounded-full shadow-lg ring-2 ring-purple-100" 
+                    width={64} 
+                    height={64} 
+                    className="rounded-full shadow-2xl ring-4 ring-white/50" 
                   />
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-white"></div>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-3 border-white shadow-lg"></div>
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                  <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
                     Makart Studio
                   </h1>
-                  <p className="text-sm text-gray-600 font-medium">Particle Animation Platform</p>
+                  <p className="text-lg text-gray-600 font-medium">✨ Particle Animation Platform</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-6">
                 <div className="text-right">
-                  <p className="text-sm text-gray-600">Welcome back,</p>
-                  <p className="font-semibold text-gray-900">{user?.email}</p>
+                  <p className="text-sm text-gray-600 font-medium">Welcome back,</p>
+                  <p className="text-lg font-bold text-gray-900">{user?.email}</p>
                 </div>
                 <button
                   onClick={logout}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white/80 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+                  className="px-6 py-3 text-sm font-semibold text-gray-700 glass-card rounded-xl hover:scale-105 transition-all duration-300 shadow-lg"
                 >
                   Sign Out
                 </button>
@@ -160,29 +160,29 @@ export default function Home() {
         </header>
 
         {/* Main Content */}
-        <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center mb-12">
-            <h2 className="text-5xl font-bold text-gray-900 mb-6">
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center mb-16 slide-up">
+            <h2 className="text-6xl font-bold text-gray-900 mb-8 tracking-tight leading-tight">
               Transform Your Art Into{' '}
-              <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
                 Magic
               </span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed font-medium">
               Upload your paintings and watch them come alive with stunning particle animations. 
               Create professional-quality animated artworks in seconds.
             </p>
           </div>
 
           {/* Upload Area */}
-          <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 mb-8 border border-white/20">
+          <div className="glass-card rounded-3xl p-10 mb-10 fade-in">
             <div
-              className={`border-2 border-dashed rounded-2xl p-16 text-center transition-all duration-300 ${
+              className={`border-2 border-dashed rounded-3xl p-20 text-center transition-all duration-500 cursor-pointer ${
                 dragOver 
-                  ? 'border-purple-400 bg-purple-50 scale-[1.02]' 
+                  ? 'border-blue-400 bg-blue-50/30 scale-[1.02] shadow-2xl' 
                   : file 
-                  ? 'border-green-300 bg-green-50' 
-                  : 'border-gray-300 hover:border-purple-300 hover:bg-purple-50/50 hover:scale-[1.01]'
+                  ? 'border-green-400 bg-green-50/30 shadow-xl' 
+                  : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50/20 hover:scale-[1.01] hover:shadow-xl'
               }`}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
@@ -198,34 +198,30 @@ export default function Home() {
               />
               
               {file ? (
-                <div className="space-y-6">
-                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center shadow-lg">
-                    <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                <div className="space-y-8">
+                  <div className="w-28 h-28 mx-auto bg-gradient-to-br from-green-100 to-green-200 rounded-3xl flex items-center justify-center shadow-2xl">
+                    <span className="text-4xl">✅</span>
                   </div>
                   <div>
-                    <p className="text-xl font-semibold text-gray-900">{file.name}</p>
-                    <p className="text-lg text-gray-600">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <p className="text-2xl font-bold text-gray-900 mb-2">{file.name}</p>
+                    <p className="text-xl text-gray-600 mb-4">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                     <button
                       onClick={(e) => { e.stopPropagation(); resetUpload(); }}
-                      className="mt-3 text-purple-600 hover:text-purple-800 font-medium transition-colors"
+                      className="glass-button px-6 py-3 text-white font-semibold rounded-xl transition-all duration-300"
                     >
                       Choose different file
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-6">
-                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center shadow-lg">
-                    <svg className="w-12 h-12 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
+                <div className="space-y-8">
+                  <div className="w-28 h-28 mx-auto bg-gradient-to-br from-blue-100 to-purple-100 rounded-3xl flex items-center justify-center shadow-2xl">
+                    <span className="text-4xl">🎨</span>
                   </div>
                   <div>
-                    <p className="text-2xl font-semibold text-gray-900">Drop your artwork here</p>
-                    <p className="text-lg text-gray-600">or click to browse files</p>
-                    <p className="text-sm text-gray-500 mt-2">PNG, JPG, JPEG up to 50MB</p>
+                    <p className="text-3xl font-bold text-gray-900 mb-3">Drop your art 🎨</p>
+                    <p className="text-xl text-gray-600 mb-2">or click to browse files</p>
+                    <p className="text-lg text-gray-500">PNG, JPG, JPEG up to 50MB</p>
                   </div>
                 </div>
               )}
@@ -233,27 +229,25 @@ export default function Home() {
 
             {/* Error Display */}
             {error && (
-              <div className="mt-6 bg-red-50 border border-red-200 rounded-xl p-4">
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <p className="text-red-600 font-medium">{error}</p>
+              <div className="mt-8 glass-card rounded-2xl p-6 border-red-200 bg-red-50/70">
+                <div className="flex items-start">
+                  <span className="text-red-400 text-2xl mr-4">⚠️</span>
+                  <p className="text-red-700 font-semibold text-lg">{error}</p>
                 </div>
               </div>
             )}
 
             {/* Customization Options */}
             {file && !error && (
-              <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="space-y-3">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Duration
+              <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="space-y-4">
+                  <label className="block text-lg font-bold text-gray-700 tracking-wide">
+                    ⏱️ Duration
                   </label>
                   <select
                     value={options.duration}
                     onChange={(e) => setOptions({...options, duration: parseInt(e.target.value)})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white shadow-sm text-gray-900 font-medium"
+                    className="glass-input w-full px-5 py-4 rounded-xl text-gray-900 font-semibold text-lg"
                   >
                     <option value={5}>5 seconds</option>
                     <option value={10}>10 seconds</option>
@@ -262,14 +256,14 @@ export default function Home() {
                   </select>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Quality
+                <div className="space-y-4">
+                  <label className="block text-lg font-bold text-gray-700 tracking-wide">
+                    💎 Quality
                   </label>
                   <select
                     value={options.quality}
                     onChange={(e) => setOptions({...options, quality: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white shadow-sm text-gray-900 font-medium"
+                    className="glass-input w-full px-5 py-4 rounded-xl text-gray-900 font-semibold text-lg"
                   >
                     <option value="standard">Standard</option>
                     <option value="high">High</option>
@@ -277,14 +271,14 @@ export default function Home() {
                   </select>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Animation Style
+                <div className="space-y-4">
+                  <label className="block text-lg font-bold text-gray-700 tracking-wide">
+                    🎭 Animation Style
                   </label>
                   <select
                     value={options.style}
                     onChange={(e) => setOptions({...options, style: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white shadow-sm text-gray-900 font-medium"
+                    className="glass-input w-full px-5 py-4 rounded-xl text-gray-900 font-semibold text-lg"
                   >
                     <option value="particle_powder">✨ Particle Powder</option>
                     <option value="flowing_paint">🎨 Flowing Paint</option>
@@ -298,22 +292,22 @@ export default function Home() {
 
             {/* Action Button */}
             {file && !error && (
-              <div className="mt-10 text-center">
+              <div className="mt-12 text-center">
                 <button
                   onClick={handleSubmit}
                   disabled={isProcessing}
-                  className="px-12 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold text-lg rounded-2xl hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-xl"
+                  className="glass-button px-16 py-6 text-white font-bold text-xl rounded-3xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-2xl"
                 >
                   {isProcessing ? (
                     <>
-                      <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <svg className="animate-spin -ml-1 mr-4 h-7 w-7 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
                       Creating Magic...
                     </>
                   ) : (
-                    '🎨 Create Animation'
+                    '✨ Create Animation'
                   )}
                 </button>
               </div>
@@ -322,20 +316,20 @@ export default function Home() {
 
           {/* Progress & Status */}
           {(isProcessing || status) && (
-            <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 mb-8 border border-white/20">
+            <div className="glass-card rounded-3xl p-10 mb-10 fade-in">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                <h3 className="text-3xl font-bold text-gray-900 mb-8">
                   {status}
                 </h3>
                 {isProcessing && (
-                  <div className="w-full bg-gray-200 rounded-full h-4 mb-6 shadow-inner">
+                  <div className="w-full bg-white/50 rounded-full h-6 mb-8 shadow-inner backdrop-blur-sm">
                     <div 
-                      className="bg-gradient-to-r from-purple-600 to-blue-600 h-4 rounded-full transition-all duration-500 shadow-sm"
+                      className="bg-gradient-to-r from-blue-500 to-purple-600 h-6 rounded-full transition-all duration-1000 shadow-lg"
                       style={{ width: `${progress}%` }}
                     ></div>
                   </div>
                 )}
-                <p className="text-lg text-gray-600">
+                <p className="text-xl text-gray-600 font-medium">
                   {isProcessing ? 'Please wait while we process your artwork...' : ''}
                 </p>
               </div>
@@ -344,37 +338,35 @@ export default function Home() {
 
           {/* Results */}
           {result && (
-            <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
+            <div className="glass-card rounded-3xl p-10 fade-in">
               <div className="text-center">
-                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center mb-6 shadow-lg">
-                  <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+                <div className="w-24 h-24 mx-auto bg-gradient-to-br from-green-100 to-green-200 rounded-3xl flex items-center justify-center mb-8 shadow-2xl">
+                  <span className="text-5xl">🎉</span>
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-6">
+                <h3 className="text-4xl font-bold text-gray-900 mb-8">
                   {result.message}
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8 text-sm">
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 shadow-sm">
-                    <p className="font-semibold text-gray-900 mb-1">File</p>
-                    <p className="text-gray-600">{result.filename}</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-10 text-lg">
+                  <div className="glass-card rounded-2xl p-6 shadow-lg">
+                    <p className="font-bold text-gray-900 mb-2">📁 File</p>
+                    <p className="text-gray-600 font-medium">{result.filename}</p>
                   </div>
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 shadow-sm">
-                    <p className="font-semibold text-gray-900 mb-1">Duration</p>
-                    <p className="text-gray-600">{result.duration}s</p>
+                  <div className="glass-card rounded-2xl p-6 shadow-lg">
+                    <p className="font-bold text-gray-900 mb-2">⏱️ Duration</p>
+                    <p className="text-gray-600 font-medium">{result.duration}s</p>
                   </div>
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 shadow-sm">
-                    <p className="font-semibold text-gray-900 mb-1">Quality</p>
-                    <p className="text-gray-600">{result.quality}</p>
+                  <div className="glass-card rounded-2xl p-6 shadow-lg">
+                    <p className="font-bold text-gray-900 mb-2">💎 Quality</p>
+                    <p className="text-gray-600 font-medium">{result.quality}</p>
                   </div>
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 shadow-sm">
-                    <p className="font-semibold text-gray-900 mb-1">Style</p>
-                    <p className="text-gray-600">{result.style}</p>
+                  <div className="glass-card rounded-2xl p-6 shadow-lg">
+                    <p className="font-bold text-gray-900 mb-2">🎭 Style</p>
+                    <p className="text-gray-600 font-medium">{result.style}</p>
                   </div>
                 </div>
                 <button
                   onClick={resetUpload}
-                  className="mt-8 px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold text-lg rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg"
+                  className="mt-10 glass-button px-12 py-5 text-white font-bold text-xl rounded-2xl transition-all duration-300 shadow-2xl"
                 >
                   ✨ Create Another Animation
                 </button>
@@ -382,6 +374,13 @@ export default function Home() {
             </div>
           )}
         </main>
+
+        {/* Footer */}
+        <footer className="text-center py-8 mt-16">
+          <p className="text-gray-500 font-medium opacity-70">
+            © 2024 Makart Studio - Bringing Art to Life
+          </p>
+        </footer>
       </div>
     </ProtectedRoute>
   );
