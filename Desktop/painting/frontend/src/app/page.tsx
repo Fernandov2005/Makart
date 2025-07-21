@@ -196,6 +196,7 @@ export default function Home() {
 
           {/* Upload Area */}
           <div className="glass-container p-8 mb-8 fade-in">
+            {/* File upload area with 50MB support - v2.1 */}
             <div
               className={`border-2 border-dashed rounded-3xl p-16 text-center transition-all duration-500 cursor-pointer ${
                 dragOver 
