@@ -115,7 +115,7 @@ export default function Home() {
       setResult(response);
     } catch (err: unknown) {
       console.error('Upload error:', err);
-      let errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage || 'Something went wrong. Please try again.');
       setStatus('');
     } finally {
