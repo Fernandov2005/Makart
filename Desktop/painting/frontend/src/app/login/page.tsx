@@ -45,47 +45,53 @@ export default function LoginPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center glass-card rounded-3xl p-12 fade-in">
-          <Image src="/logo-handshake.png" alt="Makart Logo" width={80} height={80} className="mx-auto mb-8 rounded-full shadow-2xl" />
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-6"></div>
-          <p className="text-gray-600 text-lg font-medium">Loading Makart Studio...</p>
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="glass-container p-12 text-center scale-in">
+          <Image 
+            src="/logo-handshake.png" 
+            alt="Makart Logo" 
+            width={80} 
+            height={80} 
+            className="mx-auto mb-8 rounded-full shadow-2xl" 
+          />
+          <div className="spinner mx-auto mb-6"></div>
+          <p className="text-gray-700 text-lg font-medium">Loading Makart Studio...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md slide-up">
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="w-full max-w-md fade-in">
         {/* Logo and Branding */}
-        <div className="text-center mb-12">
-          <div className="relative mb-8">
+        <div className="text-center mb-8">
+          <div className="relative mb-6">
             <Image 
               src="/logo-handshake.png" 
               alt="Makart Logo" 
-              width={120} 
-              height={120} 
-              className="mx-auto rounded-full shadow-2xl ring-4 ring-white/50" 
+              width={100} 
+              height={100} 
+              className="mx-auto rounded-full shadow-2xl" 
             />
-            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-400 rounded-full border-4 border-white shadow-lg"></div>
+            <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-green-400 rounded-full border-3 border-white shadow-lg"></div>
           </div>
-          <h1 className="text-5xl font-bold text-gray-900 mb-3 tracking-tight">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2 tracking-tight">
             Makart Studio
           </h1>
-          <p className="text-xl text-gray-600 font-medium">
-            ✨ Particle Animation Platform
+          <p className="text-lg text-gray-600 font-medium">
+            Particle Animation Platform ✨
           </p>
         </div>
 
         {/* Login Form */}
-        <div className="glass-card rounded-3xl p-10 mb-8">
+        <div className="glass-container p-8 mb-6">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">
               Welcome Back
             </h2>
             <p className="text-gray-600 text-lg">
-              Sign in to transform your art into magic 🎨
+              Sign in to transform your art into magic
             </p>
           </div>
 
@@ -93,12 +99,12 @@ export default function LoginPage() {
             <div className="space-y-5">
               {/* Email Input */}
               <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-3 tracking-wide">
+                <label htmlFor="email" className="block text-sm font-semibold text-gray-800 mb-3 tracking-wide">
                   Email Address
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <span className="text-gray-400 text-xl">📧</span>
+                    <span className="text-gray-500 text-lg">✉️</span>
                   </div>
                   <input
                     id="email"
@@ -107,7 +113,7 @@ export default function LoginPage() {
                     autoComplete="email"
                     required
                     disabled={isSubmitting}
-                    className="glass-input w-full pl-12 pr-4 py-4 text-gray-900 rounded-2xl placeholder-gray-400 font-medium text-lg disabled:opacity-50"
+                    className="glass-input w-full pl-12 pr-4 py-4 text-lg disabled:opacity-50"
                     placeholder="your@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -117,12 +123,12 @@ export default function LoginPage() {
               
               {/* Password Input */}
               <div>
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-3 tracking-wide">
+                <label htmlFor="password" className="block text-sm font-semibold text-gray-800 mb-3 tracking-wide">
                   Password
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <span className="text-gray-400 text-xl">🔒</span>
+                    <span className="text-gray-500 text-lg">🔒</span>
                   </div>
                   <input
                     id="password"
@@ -131,7 +137,7 @@ export default function LoginPage() {
                     autoComplete="current-password"
                     required
                     disabled={isSubmitting}
-                    className="glass-input w-full pl-12 pr-4 py-4 text-gray-900 rounded-2xl placeholder-gray-400 font-medium text-lg disabled:opacity-50"
+                    className="glass-input w-full pl-12 pr-4 py-4 text-lg disabled:opacity-50"
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -142,9 +148,9 @@ export default function LoginPage() {
             
             {/* Error Display */}
             {error && (
-              <div className="glass-card rounded-2xl p-4 border-red-200 bg-red-50/70">
+              <div className="glass-container p-4 border border-red-300/30 bg-red-50/20">
                 <div className="flex items-start">
-                  <span className="text-red-400 text-xl mr-3 mt-1">⚠️</span>
+                  <span className="text-red-500 text-lg mr-3 mt-1">⚠️</span>
                   <div>
                     <p className="text-sm text-red-700 font-semibold">{error}</p>
                     {error.includes('Unable to connect') && (
@@ -161,14 +167,11 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="glass-button w-full px-6 py-5 text-white font-bold text-lg rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="glass-button w-full px-6 py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isSubmitting ? (
                 <div className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <div className="spinner mr-3" style={{ width: '20px', height: '20px', borderWidth: '2px' }}></div>
                   Signing you in...
                 </div>
               ) : (
@@ -179,7 +182,7 @@ export default function LoginPage() {
 
           {/* Footer */}
           <div className="mt-8 text-center">
-            <p className="text-sm text-gray-500 font-medium">
+            <p className="text-sm text-gray-600 font-medium">
               Transform your paintings into magical particle animations
             </p>
           </div>
@@ -187,7 +190,7 @@ export default function LoginPage() {
 
         {/* Additional Info */}
         <div className="text-center">
-          <p className="text-sm text-gray-500 font-medium opacity-70">
+          <p className="text-sm text-gray-500 font-medium opacity-50">
             © 2024 Makart Studio - Bringing Art to Life
           </p>
         </div>

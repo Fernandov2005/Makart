@@ -30,6 +30,10 @@ async function fetchApi(path: string, options: RequestInit = {}) {
         errorMessage = 'Server error. Please try again.';
       } else if (response.status === 401) {
         errorMessage = 'Authentication required. Please log in again.';
+      } else if (response.status === 408) {
+        errorMessage = 'Upload timeout. Please try again or use a smaller file.';
+      } else if (response.status === 0) {
+        errorMessage = 'Network error. Please check your connection and try again.';
       }
     }
     
@@ -48,11 +52,14 @@ export const login = async (email: string, password: string) => {
 };
 
 export const logout = async () => {
-  return fetchApi('/logout', { method: 'POST' });
+  const response = await fetchApi('/logout', {
+    method: 'POST',
+  });
+  return response.json();
 };
 
-export const checkSession = async () => {
-  const response = await fetchApi('/session');
+export const checkAuth = async () => {
+  const response = await fetchApi('/auth/check');
   return response.json();
 };
 
@@ -63,22 +70,46 @@ interface UploadOptions {
 }
 
 export const uploadFile = async (file: File, options: UploadOptions, onUploadProgress: (progress: number) => void) => {
+  // Validate file before upload
+  if (file.size > 50 * 1024 * 1024) {
+    throw new Error('File too large. Maximum size is 50MB.');
+  }
+
   const formData = new FormData();
   formData.append('file', file);
   formData.append('duration', String(options.duration));
   formData.append('quality', options.quality);
   formData.append('style', options.style);
 
-  // Simulate upload progress
-  onUploadProgress(30);
-  
+  // Enhanced progress simulation with more realistic stages
+  const progressStages = [10, 25, 40, 60, 80, 95];
+  let currentStage = 0;
+
+  const progressInterval = setInterval(() => {
+    if (currentStage < progressStages.length) {
+      onUploadProgress(progressStages[currentStage]);
+      currentStage++;
+    }
+  }, 800);
+
   try {
+    // Create AbortController for timeout handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 120000); // 2 minutes timeout
+
     const response = await fetch(`${API_URL}/upload`, {
       method: 'POST',
       body: formData,
       credentials: 'include',
+      signal: controller.signal,
+      // Remove Content-Type header to let browser set it with boundary
+      headers: {},
     });
     
+    clearTimeout(timeoutId);
+    clearInterval(progressInterval);
     onUploadProgress(100);
     
     if (!response.ok) {
@@ -88,13 +119,21 @@ export const uploadFile = async (file: File, options: UploadOptions, onUploadPro
         const errorData = await response.json();
         errorMessage = errorData.error || errorMessage;
       } catch {
-        // If we can't parse the error response, use status-based messages
+        // Enhanced error handling based on status codes
         if (response.status === 413) {
           errorMessage = 'File too large. Please choose a smaller image (max 50MB).';
         } else if (response.status === 500) {
           errorMessage = 'Server error during upload. Please try again.';
         } else if (response.status === 401) {
           errorMessage = 'Authentication required. Please log in again.';
+        } else if (response.status === 415) {
+          errorMessage = 'Unsupported file type. Please use PNG, JPG, or JPEG.';
+        } else if (response.status === 408) {
+          errorMessage = 'Upload timeout. Please try again or use a smaller file.';
+        } else if (response.status === 0) {
+          errorMessage = 'Network error. Please check your connection.';
+        } else {
+          errorMessage = `Upload failed (Error ${response.status}). Please try again.`;
         }
       }
       
@@ -105,7 +144,19 @@ export const uploadFile = async (file: File, options: UploadOptions, onUploadPro
     const result = await response.json();
     return result;
   } catch (error) {
+    clearInterval(progressInterval);
     onUploadProgress(0); // Reset progress on error
-    throw error;
+    
+    // Handle different error types
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        throw new Error('Upload timeout. Please try again or use a smaller file.');
+      } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+        throw new Error('Network error. Please check your connection and try again.');
+      }
+      throw error;
+    }
+    
+    throw new Error('Upload failed. Please try again.');
   }
 }; 

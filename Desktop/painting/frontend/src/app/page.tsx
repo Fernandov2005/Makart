@@ -84,7 +84,7 @@ export default function Home() {
     if (!file) return;
     
     setIsProcessing(true);
-    setStatus('Uploading your masterpiece...');
+    setStatus('Creating your masterpiece...');
     setProgress(0);
     setResult(null);
     setError('');
@@ -121,36 +121,36 @@ export default function Home() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen">
-        {/* Header */}
-        <header className="glass sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Sticky Glass Navbar */}
+        <header className="glass-navbar sticky top-0 z-50">
+          <div className="max-w-6xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-4">
                 <div className="relative">
                   <Image 
                     src="/logo-handshake.png" 
                     alt="Makart Logo" 
-                    width={64} 
-                    height={64} 
-                    className="rounded-full shadow-2xl ring-4 ring-white/50" 
+                    width={50} 
+                    height={50} 
+                    className="rounded-full shadow-lg" 
                   />
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-3 border-white shadow-lg"></div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white shadow-md"></div>
                 </div>
                 <div>
-                  <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
+                  <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
                     Makart Studio
                   </h1>
-                  <p className="text-lg text-gray-600 font-medium">✨ Particle Animation Platform</p>
+                  <p className="text-sm text-gray-600 font-medium">Particle Animation Platform</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-6">
-                <div className="text-right">
+              <div className="flex items-center space-x-4">
+                <div className="text-right hidden sm:block">
                   <p className="text-sm text-gray-600 font-medium">Welcome back,</p>
-                  <p className="text-lg font-bold text-gray-900">{user?.email}</p>
+                  <p className="font-semibold text-gray-900">{user?.email}</p>
                 </div>
                 <button
                   onClick={logout}
-                  className="px-6 py-3 text-sm font-semibold text-gray-700 glass-card rounded-xl hover:scale-105 transition-all duration-300 shadow-lg"
+                  className="glass-button px-4 py-2 text-sm font-semibold hover:scale-105"
                 >
                   Sign Out
                 </button>
@@ -160,29 +160,28 @@ export default function Home() {
         </header>
 
         {/* Main Content */}
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center mb-16 slide-up">
-            <h2 className="text-6xl font-bold text-gray-900 mb-8 tracking-tight leading-tight">
+        <main className="max-w-4xl mx-auto px-6 py-12">
+          <div className="text-center mb-12 slide-up">
+            <h2 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight leading-tight">
               Transform Your Art Into{' '}
               <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
                 Magic
               </span>
             </h2>
-            <p className="text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed font-medium">
-              Upload your paintings and watch them come alive with stunning particle animations. 
-              Create professional-quality animated artworks in seconds.
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed font-medium">
+              Upload your paintings and watch them come alive with stunning particle animations.
             </p>
           </div>
 
           {/* Upload Area */}
-          <div className="glass-card rounded-3xl p-10 mb-10 fade-in">
+          <div className="glass-container p-8 mb-8 fade-in">
             <div
-              className={`border-2 border-dashed rounded-3xl p-20 text-center transition-all duration-500 cursor-pointer ${
+              className={`border-2 border-dashed rounded-3xl p-16 text-center transition-all duration-500 cursor-pointer ${
                 dragOver 
-                  ? 'border-blue-400 bg-blue-50/30 scale-[1.02] shadow-2xl' 
+                  ? 'drag-glow scale-[1.02]' 
                   : file 
-                  ? 'border-green-400 bg-green-50/30 shadow-xl' 
-                  : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50/20 hover:scale-[1.01] hover:shadow-xl'
+                  ? 'border-green-400 bg-green-50/20' 
+                  : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50/10 hover:scale-[1.01]'
               }`}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
@@ -198,30 +197,30 @@ export default function Home() {
               />
               
               {file ? (
-                <div className="space-y-8">
-                  <div className="w-28 h-28 mx-auto bg-gradient-to-br from-green-100 to-green-200 rounded-3xl flex items-center justify-center shadow-2xl">
-                    <span className="text-4xl">✅</span>
+                <div className="space-y-6">
+                  <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center shadow-xl">
+                    <span className="text-3xl">✅</span>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900 mb-2">{file.name}</p>
-                    <p className="text-xl text-gray-600 mb-4">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <p className="text-xl font-bold text-gray-900 mb-1">{file.name}</p>
+                    <p className="text-lg text-gray-600 mb-4">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                     <button
                       onClick={(e) => { e.stopPropagation(); resetUpload(); }}
-                      className="glass-button px-6 py-3 text-white font-semibold rounded-xl transition-all duration-300"
+                      className="glass-button px-4 py-2 text-sm font-semibold"
                     >
                       Choose different file
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-8">
-                  <div className="w-28 h-28 mx-auto bg-gradient-to-br from-blue-100 to-purple-100 rounded-3xl flex items-center justify-center shadow-2xl">
-                    <span className="text-4xl">🎨</span>
+                <div className="space-y-6">
+                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center shadow-xl">
+                    <span className="text-4xl">🖼️</span>
                   </div>
                   <div>
-                    <p className="text-3xl font-bold text-gray-900 mb-3">Drop your art 🎨</p>
-                    <p className="text-xl text-gray-600 mb-2">or click to browse files</p>
-                    <p className="text-lg text-gray-500">PNG, JPG, JPEG up to 50MB</p>
+                    <p className="text-2xl font-bold text-gray-900 mb-2">Drop your art here</p>
+                    <p className="text-lg text-gray-600 mb-1">or click to browse files</p>
+                    <p className="text-sm text-gray-500">PNG, JPG, JPEG up to 50MB</p>
                   </div>
                 </div>
               )}
@@ -229,25 +228,25 @@ export default function Home() {
 
             {/* Error Display */}
             {error && (
-              <div className="mt-8 glass-card rounded-2xl p-6 border-red-200 bg-red-50/70">
+              <div className="mt-6 glass-container p-4 border border-red-300/30 bg-red-50/20">
                 <div className="flex items-start">
-                  <span className="text-red-400 text-2xl mr-4">⚠️</span>
-                  <p className="text-red-700 font-semibold text-lg">{error}</p>
+                  <span className="text-red-500 text-lg mr-3">⚠️</span>
+                  <p className="text-red-700 font-semibold">{error}</p>
                 </div>
               </div>
             )}
 
             {/* Customization Options */}
             {file && !error && (
-              <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="space-y-4">
-                  <label className="block text-lg font-bold text-gray-700 tracking-wide">
-                    ⏱️ Duration
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-3">
+                  <label className="block text-sm font-bold text-gray-800 tracking-wide">
+                    Duration
                   </label>
                   <select
                     value={options.duration}
                     onChange={(e) => setOptions({...options, duration: parseInt(e.target.value)})}
-                    className="glass-input w-full px-5 py-4 rounded-xl text-gray-900 font-semibold text-lg"
+                    className="glass-input w-full px-4 py-3 text-gray-900 font-semibold"
                   >
                     <option value={5}>5 seconds</option>
                     <option value={10}>10 seconds</option>
@@ -256,14 +255,14 @@ export default function Home() {
                   </select>
                 </div>
 
-                <div className="space-y-4">
-                  <label className="block text-lg font-bold text-gray-700 tracking-wide">
-                    💎 Quality
+                <div className="space-y-3">
+                  <label className="block text-sm font-bold text-gray-800 tracking-wide">
+                    Quality
                   </label>
                   <select
                     value={options.quality}
                     onChange={(e) => setOptions({...options, quality: e.target.value})}
-                    className="glass-input w-full px-5 py-4 rounded-xl text-gray-900 font-semibold text-lg"
+                    className="glass-input w-full px-4 py-3 text-gray-900 font-semibold"
                   >
                     <option value="standard">Standard</option>
                     <option value="high">High</option>
@@ -271,14 +270,14 @@ export default function Home() {
                   </select>
                 </div>
 
-                <div className="space-y-4">
-                  <label className="block text-lg font-bold text-gray-700 tracking-wide">
-                    🎭 Animation Style
+                <div className="space-y-3">
+                  <label className="block text-sm font-bold text-gray-800 tracking-wide">
+                    Animation Style
                   </label>
                   <select
                     value={options.style}
                     onChange={(e) => setOptions({...options, style: e.target.value})}
-                    className="glass-input w-full px-5 py-4 rounded-xl text-gray-900 font-semibold text-lg"
+                    className="glass-input w-full px-4 py-3 text-gray-900 font-semibold"
                   >
                     <option value="particle_powder">✨ Particle Powder</option>
                     <option value="flowing_paint">🎨 Flowing Paint</option>
@@ -292,18 +291,15 @@ export default function Home() {
 
             {/* Action Button */}
             {file && !error && (
-              <div className="mt-12 text-center">
+              <div className="mt-8 text-center">
                 <button
                   onClick={handleSubmit}
                   disabled={isProcessing}
-                  className="glass-button px-16 py-6 text-white font-bold text-xl rounded-3xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-2xl"
+                  className="glass-button px-12 py-4 text-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   {isProcessing ? (
                     <>
-                      <svg className="animate-spin -ml-1 mr-4 h-7 w-7 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
+                      <div className="spinner inline-block mr-3" style={{ width: '20px', height: '20px', borderWidth: '2px' }}></div>
                       Creating Magic...
                     </>
                   ) : (
@@ -316,20 +312,20 @@ export default function Home() {
 
           {/* Progress & Status */}
           {(isProcessing || status) && (
-            <div className="glass-card rounded-3xl p-10 mb-10 fade-in">
+            <div className="glass-container p-8 mb-8 scale-in">
               <div className="text-center">
-                <h3 className="text-3xl font-bold text-gray-900 mb-8">
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">
                   {status}
                 </h3>
                 {isProcessing && (
-                  <div className="w-full bg-white/50 rounded-full h-6 mb-8 shadow-inner backdrop-blur-sm">
+                  <div className="w-full bg-white/30 rounded-full h-3 mb-6 shadow-inner">
                     <div 
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 h-6 rounded-full transition-all duration-1000 shadow-lg"
+                      className="progress-gradient h-3 rounded-full transition-all duration-1000"
                       style={{ width: `${progress}%` }}
                     ></div>
                   </div>
                 )}
-                <p className="text-xl text-gray-600 font-medium">
+                <p className="text-lg text-gray-600 font-medium">
                   {isProcessing ? 'Please wait while we process your artwork...' : ''}
                 </p>
               </div>
@@ -338,35 +334,35 @@ export default function Home() {
 
           {/* Results */}
           {result && (
-            <div className="glass-card rounded-3xl p-10 fade-in">
+            <div className="glass-container p-8 scale-in">
               <div className="text-center">
-                <div className="w-24 h-24 mx-auto bg-gradient-to-br from-green-100 to-green-200 rounded-3xl flex items-center justify-center mb-8 shadow-2xl">
-                  <span className="text-5xl">🎉</span>
+                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center mb-6 shadow-xl">
+                  <span className="text-3xl">🎉</span>
                 </div>
-                <h3 className="text-4xl font-bold text-gray-900 mb-8">
+                <h3 className="text-3xl font-bold text-gray-900 mb-6">
                   {result.message}
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-10 text-lg">
-                  <div className="glass-card rounded-2xl p-6 shadow-lg">
-                    <p className="font-bold text-gray-900 mb-2">📁 File</p>
-                    <p className="text-gray-600 font-medium">{result.filename}</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+                  <div className="glass-container p-4 text-center">
+                    <p className="font-bold text-gray-900 mb-1 text-sm">File</p>
+                    <p className="text-gray-600 font-medium text-xs">{result.filename}</p>
                   </div>
-                  <div className="glass-card rounded-2xl p-6 shadow-lg">
-                    <p className="font-bold text-gray-900 mb-2">⏱️ Duration</p>
-                    <p className="text-gray-600 font-medium">{result.duration}s</p>
+                  <div className="glass-container p-4 text-center">
+                    <p className="font-bold text-gray-900 mb-1 text-sm">Duration</p>
+                    <p className="text-gray-600 font-medium text-xs">{result.duration}s</p>
                   </div>
-                  <div className="glass-card rounded-2xl p-6 shadow-lg">
-                    <p className="font-bold text-gray-900 mb-2">💎 Quality</p>
-                    <p className="text-gray-600 font-medium">{result.quality}</p>
+                  <div className="glass-container p-4 text-center">
+                    <p className="font-bold text-gray-900 mb-1 text-sm">Quality</p>
+                    <p className="text-gray-600 font-medium text-xs">{result.quality}</p>
                   </div>
-                  <div className="glass-card rounded-2xl p-6 shadow-lg">
-                    <p className="font-bold text-gray-900 mb-2">🎭 Style</p>
-                    <p className="text-gray-600 font-medium">{result.style}</p>
+                  <div className="glass-container p-4 text-center">
+                    <p className="font-bold text-gray-900 mb-1 text-sm">Style</p>
+                    <p className="text-gray-600 font-medium text-xs">{result.style}</p>
                   </div>
                 </div>
                 <button
                   onClick={resetUpload}
-                  className="mt-10 glass-button px-12 py-5 text-white font-bold text-xl rounded-2xl transition-all duration-300 shadow-2xl"
+                  className="mt-8 glass-button px-8 py-3 text-lg font-bold"
                 >
                   ✨ Create Another Animation
                 </button>
@@ -376,8 +372,8 @@ export default function Home() {
         </main>
 
         {/* Footer */}
-        <footer className="text-center py-8 mt-16">
-          <p className="text-gray-500 font-medium opacity-70">
+        <footer className="text-center py-6 mt-12">
+          <p className="text-sm text-gray-500 font-medium opacity-50">
             © 2024 Makart Studio - Bringing Art to Life
           </p>
         </footer>
