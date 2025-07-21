@@ -31,16 +31,27 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateFile = (selectedFile: File) => {
+    console.log('Validating file:', {
+      name: selectedFile.name,
+      size: selectedFile.size,
+      sizeInMB: (selectedFile.size / 1024 / 1024).toFixed(2),
+      type: selectedFile.type,
+      maxSizeBytes: 15 * 1024 * 1024,
+      maxSizeMB: 15
+    });
+
     // Check file type
     if (!selectedFile.type.startsWith('image/')) {
       setError('Please upload an image file (PNG, JPG, JPEG, etc.)');
       return false;
     }
 
-    // Conservative file size check (15MB limit for better compatibility)
-    const maxSize = 15 * 1024 * 1024; // 15MB in bytes
+    // Conservative file size check (25MB limit for testing)
+    const maxSize = 25 * 1024 * 1024; // 25MB in bytes
+    console.log('Size comparison:', selectedFile.size, '>', maxSize, '=', selectedFile.size > maxSize);
+    
     if (selectedFile.size > maxSize) {
-      setError(`File too large for processing. Your file is ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB but we support up to 15MB. Try compressing your image or reducing its resolution.`);
+      setError(`File too large for processing. Your file is ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB but we support up to 25MB. Try compressing your image or reducing its resolution.`);
       return false;
     }
 
@@ -50,6 +61,7 @@ export default function Home() {
       return false;
     }
 
+    console.log('File validation passed!');
     setError('');
     return true;
   };
@@ -102,15 +114,13 @@ export default function Home() {
     } catch (err: unknown) {
       console.error('Upload error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      if (errorMessage.includes('413') || errorMessage.includes('too large') || errorMessage.includes('large')) {
-        setError('File too large for processing. Please use images under 15MB. Try compressing your image or reducing its resolution.');
-      } else if (errorMessage.includes('timeout')) {
-        setError('Upload timeout. Please try again or use a smaller file.');
-      } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
-        setError('Network error. Please check your connection and try again.');
-      } else {
-        setError(errorMessage || 'Something went wrong. Please try again with a smaller image file.');
-      }
+      
+      // Log the actual error for debugging
+      console.log('File size:', file?.size, 'bytes (', (file?.size || 0) / 1024 / 1024, 'MB)');
+      console.log('Error message:', errorMessage);
+      
+      // Use the original error message which contains more details
+      setError(errorMessage || 'Something went wrong. Please try again.');
       setStatus('');
     } finally {
       setIsProcessing(false);
@@ -230,7 +240,7 @@ export default function Home() {
                   <div>
                     <p className="text-2xl font-bold text-gray-900 mb-2">Drop your art here</p>
                     <p className="text-lg text-gray-600 mb-1">or click to browse files</p>
-                    <p className="text-sm text-gray-500">PNG, JPG, JPEG up to 15MB</p>
+                    <p className="text-sm text-gray-500">PNG, JPG, JPEG up to 25MB (testing)</p>
                   </div>
                 </div>
               )}

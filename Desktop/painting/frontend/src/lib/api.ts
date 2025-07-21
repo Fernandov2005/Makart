@@ -70,10 +70,12 @@ interface UploadOptions {
 }
 
 export const uploadFile = async (file: File, options: UploadOptions, onUploadProgress: (progress: number) => void) => {
-  // Conservative file validation before upload
-  if (file.size > 15 * 1024 * 1024) {
-    throw new Error(`File too large for processing. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB but we support up to 15MB. Try compressing your image or reducing its resolution.`);
+  // Conservative file validation before upload (25MB for testing)
+  if (file.size > 25 * 1024 * 1024) {
+    throw new Error(`File too large for processing. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB but we support up to 25MB. Try compressing your image or reducing its resolution.`);
   }
+
+  console.log('Client-side upload validation passed for file size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
 
   const formData = new FormData();
   formData.append('file', file);
