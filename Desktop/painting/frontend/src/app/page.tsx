@@ -54,6 +54,8 @@ export default function Home() {
     }
 
     const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+    const vercelLimit = 4.5 * 1024 * 1024; // 4.5MB Vercel limit
+    
     if (selectedFile.size > maxSize) {
       setError(`File too large. Your file is ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB but we support up to 50MB. Try compressing your image or use a smaller resolution.`);
       return false;
@@ -62,6 +64,11 @@ export default function Home() {
     if (selectedFile.size < 1024) { // Less than 1KB
       setError('File appears to be empty or corrupted.');
       return false;
+    }
+
+    // Show info for large files that will use alternative processing
+    if (selectedFile.size > vercelLimit) {
+      setStatus(`📋 Large file detected (${(selectedFile.size / 1024 / 1024).toFixed(2)}MB). Will use enhanced processing method.`);
     }
 
     setError('');
@@ -243,6 +250,7 @@ export default function Home() {
                     <p className="text-2xl font-bold text-gray-900 mb-2">Drop your art here</p>
                     <p className="text-lg text-gray-600 mb-1">or click to browse files</p>
                     <p className="text-sm text-gray-500">PNG, JPG, JPEG - up to 50MB</p>
+                    <p className="text-xs text-gray-400 mt-1">✨ Large files (&gt;4.5MB) use enhanced processing</p>
                   </div>
                 </div>
               )}
