@@ -25,7 +25,15 @@ export default function Home() {
       const blob = await uploadFile(file, options, setProgress);
       setStatus('Processing...');
       
-      // Check if this is a demo response
+      // Check if this is a JSON response (new API format)
+      if (blob.type === 'application/json') {
+        const text = await blob.text();
+        const response = JSON.parse(text);
+        setStatus(response.message || 'Upload completed!');
+        return;
+      }
+      
+      // Check if this is a demo response (text format)
       if (blob.type === 'text/plain') {
         const text = await blob.text();
         if (text.includes('Demo Mode')) {
