@@ -60,6 +60,7 @@ export const uploadFile = async (file: File, options: UploadOptions, onUploadPro
   const response = await fetch(`${API_URL}/upload`, {
     method: 'POST',
     body: formData,
+    credentials: 'include', // Ensure cookies are sent with the upload request
   });
   onUploadProgress(100); // Simulate 100% progress
   
