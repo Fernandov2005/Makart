@@ -5,6 +5,7 @@ import formidable from 'formidable';
 export const config = {
   api: {
     bodyParser: false,
+    sizeLimit: '50mb', // Set larger size limit
   },
 };
 
@@ -45,10 +46,26 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       return;
     }
 
-    // Parse form data
-    const form = formidable({});
+    // Parse form data with size limits
+    const form = formidable({
+      maxFileSize: 50 * 1024 * 1024, // 50MB limit
+      maxFields: 10,
+      allowEmptyFiles: false,
+      filter: function ({ name, originalFilename, mimetype }) {
+        // Only allow image files
+        return name === 'file' && (mimetype?.includes('image/') || false);
+      }
+    });
+
     form.parse(req, (err, fields, files) => {
       if (err) {
+        console.error('Upload parsing error:', err);
+        
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          res.status(413).json({ error: 'File too large. Maximum size is 50MB.' });
+          return;
+        }
+        
         res.status(500).json({ error: 'Failed to parse upload' });
         return;
       }
@@ -63,6 +80,12 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         return;
       }
 
+      // Check file size on our end too
+      if (file.size > 50 * 1024 * 1024) {
+        res.status(413).json({ error: 'File too large. Maximum size is 50MB.' });
+        return;
+      }
+
       // Simulate processing and return a demo animation result
       const animationResult = {
         success: true,
@@ -71,7 +94,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         quality: quality || 'ultra',
         style: style || 'particle_powder',
         processingTime: `${Math.floor(Math.random() * 30) + 10}s`,
-        fileSize: `${(file.size || 0 / 1024 / 1024).toFixed(2)}MB`,
+        fileSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
         message: '🎉 Animation created successfully! (Demo mode)',
         downloadUrl: '/demo-animation.mp4'
       };
@@ -81,6 +104,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     });
 
   } catch (error) {
+    console.error('Upload error:', error);
     res.status(500).json({ error: 'Upload failed' });
   }
 } 

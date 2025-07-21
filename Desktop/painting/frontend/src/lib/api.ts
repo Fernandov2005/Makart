@@ -17,8 +17,23 @@ async function fetchApi(path: string, options: RequestInit = {}) {
   const response = await fetch(requestUrl, mergedOptions);
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || 'API request failed');
+    let errorMessage = 'API request failed';
+    
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorMessage;
+    } catch {
+      // If we can't parse the error response, use status-based messages
+      if (response.status === 413) {
+        errorMessage = 'File too large. Please choose a smaller image (max 50MB).';
+      } else if (response.status === 500) {
+        errorMessage = 'Server error. Please try again.';
+      } else if (response.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      }
+    }
+    
+    throw new Error(errorMessage);
   }
 
   return response;
@@ -56,19 +71,41 @@ export const uploadFile = async (file: File, options: UploadOptions, onUploadPro
 
   // Simulate upload progress
   onUploadProgress(30);
-  const response = await fetch(`${API_URL}/upload`, {
-    method: 'POST',
-    body: formData,
-    credentials: 'include',
-  });
-  onUploadProgress(100);
   
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || 'Upload failed');
+  try {
+    const response = await fetch(`${API_URL}/upload`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    });
+    
+    onUploadProgress(100);
+    
+    if (!response.ok) {
+      let errorMessage = 'Upload failed';
+      
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorMessage;
+      } catch {
+        // If we can't parse the error response, use status-based messages
+        if (response.status === 413) {
+          errorMessage = 'File too large. Please choose a smaller image (max 50MB).';
+        } else if (response.status === 500) {
+          errorMessage = 'Server error during upload. Please try again.';
+        } else if (response.status === 401) {
+          errorMessage = 'Authentication required. Please log in again.';
+        }
+      }
+      
+      throw new Error(errorMessage);
+    }
+    
+    // Parse the JSON response
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    onUploadProgress(0); // Reset progress on error
+    throw error;
   }
-  
-  // Parse the JSON response
-  const result = await response.json();
-  return result;
 }; 
