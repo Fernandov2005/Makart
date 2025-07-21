@@ -6,7 +6,7 @@ async function fetchApi(path: string, options: RequestInit = {}) {
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: 'omit', // Set credentials to 'omit' by default
+    credentials: 'include', // Set credentials to 'include' to send cookies
   };
   const mergedOptions: RequestInit = {
     ...defaultOptions,
