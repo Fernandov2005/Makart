@@ -115,13 +115,11 @@ export default function Home() {
       setResult(response);
     } catch (err: unknown) {
       console.error('Upload error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      
-      // Log the actual error for debugging
-      console.log('File size:', file?.size, 'bytes (', (file?.size || 0) / 1024 / 1024, 'MB)');
-      console.log('Error message:', errorMessage);
-      
-      // Use the original error message which contains more details
+      let errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      // Try to extract debug info if present
+      if (err instanceof Error && (err as any).debug) {
+        errorMessage += '\nDebug: ' + JSON.stringify((err as any).debug);
+      }
       setError(errorMessage || 'Something went wrong. Please try again.');
       setStatus('');
     } finally {

@@ -72,6 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const quality = Array.isArray(formData.fields.quality) ? formData.fields.quality[0] : formData.fields.quality;
     const style = Array.isArray(formData.fields.style) ? formData.fields.style[0] : formData.fields.style;
 
+    // Remove minimum file size check (allow very small files)
     // Log successful upload
     console.log('File successfully processed:', {
       filename: uploadedFile.originalFilename,
@@ -90,7 +91,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       fileSize: `${(uploadedFile.size / 1024 / 1024).toFixed(2)}MB`,
       message: '🎉 Animation created successfully!',
       downloadUrl: '/demo-animation.mp4',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      debug: {
+        size: uploadedFile.size,
+        mimetype: uploadedFile.mimetype,
+        fields: { duration, quality, style }
+      }
     });
 
   } catch (error) {
