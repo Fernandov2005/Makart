@@ -43,6 +43,14 @@ async function fetchApi(path: string, options: RequestInit = {}) {
   return response;
 }
 
+export const register = async (email: string, password: string) => {
+  const response = await fetchApi('/register', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+  return response.json();
+};
+
 export const login = async (email: string, password: string) => {
   const response = await fetchApi('/login', {
     method: 'POST',
@@ -58,8 +66,8 @@ export const logout = async () => {
   return response.json();
 };
 
-export const checkSession = async () => {
-  const response = await fetchApi('/session');
+export const getCurrentUser = async () => {
+  const response = await fetchApi('/user');
   return response.json();
 };
 
@@ -70,7 +78,7 @@ interface UploadOptions {
 }
 
 export const uploadFile = async (file: File, options: UploadOptions, onUploadProgress: (progress: number) => void) => {
-  // Log file details but skip client validation to ensure upload works
+  // Log file details for debugging
   console.log('Uploading file:', {
     name: file.name,
     size: file.size,
@@ -78,63 +86,44 @@ export const uploadFile = async (file: File, options: UploadOptions, onUploadPro
     type: file.type
   });
 
-  // Check if file is larger than Vercel's 4.5MB limit
-  const VERCEL_LIMIT = 4.5 * 1024 * 1024; // 4.5MB
-  
-  if (file.size > VERCEL_LIMIT) {
-    // For large files, we'll use a different strategy
-    console.log('File exceeds Vercel limit, using alternative upload method');
-    
-    // Simulate processing for demo purposes
-    let progress = 0;
-    const progressInterval = setInterval(() => {
-      progress = Math.min(progress + 10, 100);
-      onUploadProgress(progress);
-    }, 500);
-
-    // Wait 5 seconds to simulate processing
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    
-    clearInterval(progressInterval);
-    onUploadProgress(100);
-    
-    // Return a success response for large files
-    return {
-      success: true,
-      filename: file.name,
-      duration: String(options.duration),
-      quality: options.quality,
-      style: options.style,
-      processingTime: '5s',
-      fileSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
-      message: '🎉 Large file processed successfully! (Demo mode)',
-      downloadUrl: '/demo-animation.mp4',
-      note: 'Large file processing simulation - actual animation generation pending'
-    };
+  // Validate file size (50MB limit)
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(`File too large. Maximum size is 50MB, but your file is ${(file.size / 1024 / 1024).toFixed(2)}MB.`);
   }
 
-  // For smaller files, use normal upload
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    throw new Error('Please upload an image file (PNG, JPG, JPEG, GIF, BMP, WebP, etc.)');
+  }
+
+  // Create form data with file and options
   const formData = new FormData();
   formData.append('file', file);
   formData.append('duration', String(options.duration));
   formData.append('quality', options.quality);
   formData.append('style', options.style);
 
-  // Simple progress simulation - just show movement to indicate activity
-  let progress = 10;
+  // Progress tracking with realistic updates
+  let progress = 0;
+  onUploadProgress(5); // Initial progress
+
+  // Simulate upload progress (since we can't track actual upload progress easily)
   const progressInterval = setInterval(() => {
-    progress = Math.min(progress + 5, 95);
-    onUploadProgress(progress);
-  }, 500);
+    progress = Math.min(progress + Math.random() * 15 + 5, 85); // Increment by 5-20%
+    onUploadProgress(Math.round(progress));
+  }, 800);
 
   try {
     // Create AbortController for timeout handling
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();
-    }, 120000); // 2 minutes timeout
+    }, 300000); // 5 minutes timeout for large files
 
-    // Use direct fetch with no Content-Type header to let browser handle it
+    console.log('Starting upload to /api/upload...');
+
+    // Upload file with processing
     const response = await fetch('/api/upload', {
       method: 'POST',
       body: formData,
@@ -142,34 +131,58 @@ export const uploadFile = async (file: File, options: UploadOptions, onUploadPro
       signal: controller.signal,
     });
     
+    // Clear timeout and progress interval
     clearTimeout(timeoutId);
     clearInterval(progressInterval);
     onUploadProgress(100);
     
     if (!response.ok) {
-      // For debugging - log the full response
       console.error('Upload failed:', {
         status: response.status,
         statusText: response.statusText
       });
       
+      let errorMessage = 'Upload failed. Please try again.';
       try {
         const errorData = await response.json();
+        errorMessage = errorData.error || errorMessage;
         console.error('Error details:', errorData);
-        throw new Error(errorData.error || 'Upload failed. Please try again.');
-      } catch (_parseError) {
-        throw new Error('Upload failed. Please try again.');
+      } catch (parseError) {
+        console.error('Could not parse error response:', parseError);
       }
+      
+      throw new Error(errorMessage);
     }
     
     const result = await response.json();
-    return result;
+    console.log('Upload successful:', result);
+    
+    return {
+      success: result.success,
+      message: result.message,
+      filename: result.filename,
+      duration: result.duration,
+      quality: result.quality,
+      style: result.style,
+      processingTime: result.processingTime,
+      fileSize: result.fileSize,
+      downloadUrl: result.downloadUrl,
+      particleCount: result.particleCount,
+      details: result.details
+    };
+    
   } catch (error) {
+    // Clean up progress tracking
     clearInterval(progressInterval);
     onUploadProgress(0);
+    
     console.error('Upload error:', error);
     
+    // Handle specific error types
     if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        throw new Error('Upload timed out. Please try again with a smaller file or better internet connection.');
+      }
       throw error;
     }
     

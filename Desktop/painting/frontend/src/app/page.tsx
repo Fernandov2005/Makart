@@ -16,6 +16,8 @@ interface AnimationResult {
   fileSize: string;
   message: string;
   downloadUrl: string;
+  details?: string; // Added for enhanced details
+  particleCount?: number; // Added for enhanced details
 }
 
 export default function Home() {
@@ -378,40 +380,106 @@ export default function Home() {
             </div>
           )}
 
-          {/* Results */}
+          {/* Result Display */}
           {result && (
-            <div className="glass-container p-8 scale-in">
-              <div className="text-center">
-                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center mb-6 shadow-xl">
+            <div className="glass-container p-8 mt-8 text-center fade-in">
+              <div className="mb-6">
+                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center shadow-xl mb-4">
                   <span className="text-3xl">🎉</span>
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-6">
-                  {result.message}
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-                  <div className="glass-container p-4 text-center">
-                    <p className="font-bold text-gray-900 mb-1 text-sm">File</p>
-                    <p className="text-gray-600 font-medium text-xs">{result.filename}</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Animation Created!</h3>
+                <p className="text-lg text-gray-600">{result.message}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6 mb-6 text-left">
+                <div className="space-y-3">
+                  <div className="glass-card p-4">
+                    <span className="block text-sm font-semibold text-gray-500 mb-1">File Details</span>
+                    <span className="text-lg font-bold text-gray-900">{result.filename}</span>
+                    <div className="text-sm text-gray-600 mt-1">{result.fileSize}</div>
                   </div>
-                  <div className="glass-container p-4 text-center">
-                    <p className="font-bold text-gray-900 mb-1 text-sm">Duration</p>
-                    <p className="text-gray-600 font-medium text-xs">{result.duration}s</p>
-                  </div>
-                  <div className="glass-container p-4 text-center">
-                    <p className="font-bold text-gray-900 mb-1 text-sm">Quality</p>
-                    <p className="text-gray-600 font-medium text-xs">{result.quality}</p>
-                  </div>
-                  <div className="glass-container p-4 text-center">
-                    <p className="font-bold text-gray-900 mb-1 text-sm">Style</p>
-                    <p className="text-gray-600 font-medium text-xs">{result.style}</p>
+                  
+                  <div className="glass-card p-4">
+                    <span className="block text-sm font-semibold text-gray-500 mb-1">Animation Settings</span>
+                    <div className="text-sm space-y-1">
+                      <div><strong>Duration:</strong> {result.duration}</div>
+                      <div><strong>Quality:</strong> {result.quality}</div>
+                      <div><strong>Style:</strong> {result.style}</div>
+                    </div>
                   </div>
                 </div>
+
+                <div className="space-y-3">
+                  <div className="glass-card p-4">
+                    <span className="block text-sm font-semibold text-gray-500 mb-1">Processing Stats</span>
+                    <div className="text-sm space-y-1">
+                      <div><strong>Processing Time:</strong> {result.processingTime}</div>
+                      {result.particleCount && (
+                        <div><strong>Particles Generated:</strong> {result.particleCount.toLocaleString()}</div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="glass-card p-4">
+                    <span className="block text-sm font-semibold text-gray-500 mb-1">Animation Details</span>
+                    <div className="text-xs text-gray-600 leading-relaxed">
+                      {result.details}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {result.downloadUrl && (
+                <div className="space-y-4">
+                  {result.downloadUrl.startsWith('data:') ? (
+                    // Show processed image preview for demo
+                    <div className="glass-card p-4">
+                      <div className="text-sm font-semibold text-gray-500 mb-3">Processed Image Preview</div>
+                      <img 
+                        src={result.downloadUrl} 
+                        alt="Processed image preview" 
+                        className="max-w-full max-h-96 mx-auto rounded-lg shadow-lg"
+                        style={{ maxHeight: '400px' }}
+                      />
+                      <div className="text-xs text-gray-500 mt-2">
+                        ✨ This shows your image was successfully processed. In production, this would be a stunning particle animation video!
+                      </div>
+                    </div>
+                  ) : (
+                    // Download button for actual video files
+                    <a
+                      href={result.downloadUrl}
+                      download={`particle_animation_${Date.now()}.mp4`}
+                      className="glass-button px-8 py-4 text-lg font-bold inline-flex items-center gap-3"
+                    >
+                      <span className="text-2xl">📥</span>
+                      Download Animation
+                    </a>
+                  )}
+                </div>
+              )}
+
+              <div className="flex gap-4 mt-6 justify-center">
                 <button
                   onClick={resetUpload}
-                  className="mt-8 glass-button px-8 py-3 text-lg font-bold"
+                  className="glass-button px-6 py-3 text-sm font-semibold"
                 >
-                  ✨ Create Another Animation
+                  🔄 Create Another
                 </button>
+                {result.downloadUrl && result.downloadUrl.startsWith('data:') && (
+                  <button
+                    onClick={() => {
+                      // Save the processed image
+                      const link = document.createElement('a');
+                      link.href = result.downloadUrl;
+                      link.download = `processed_${result.filename || 'image'}.jpg`;
+                      link.click();
+                    }}
+                    className="glass-button px-6 py-3 text-sm font-semibold"
+                  >
+                    💾 Save Processed Image
+                  </button>
+                )}
               </div>
             </div>
           )}
