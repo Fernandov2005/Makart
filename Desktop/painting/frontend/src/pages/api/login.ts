@@ -5,8 +5,18 @@ const VALID_EMAIL = "olimpia@makincome.com";
 const VALID_PASSWORD = "Chanel2808";
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Handle CORS
-  res.setHeader('Access-Control-Allow-Origin', 'https://makart.vercel.app');
+  // Handle CORS - allow multiple origins
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'https://makart.vercel.app',
+    'http://localhost:3000',
+    'https://localhost:3000'
+  ];
+  
+  if (origin && (allowedOrigins.includes(origin) || origin.includes('.vercel.app'))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
