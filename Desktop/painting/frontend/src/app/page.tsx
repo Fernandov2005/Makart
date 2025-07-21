@@ -24,12 +24,23 @@ export default function Home() {
     try {
       const blob = await uploadFile(file, options, setProgress);
       setStatus('Processing...');
-      // Handle the downloaded file
+      
+      // Check if this is a demo response
+      if (blob.type === 'text/plain') {
+        const text = await blob.text();
+        if (text.includes('Demo Mode')) {
+          setStatus('Demo mode: Animation service is being prepared. Your file was received successfully!');
+          return;
+        }
+      }
+      
+      // Handle the downloaded file (normal mode)
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'animation.mp4';
+      a.download = blob.type === 'text/plain' ? 'demo-response.txt' : 'animation.mp4';
       a.click();
+      window.URL.revokeObjectURL(url);
       setStatus('Done!');
     } catch (error) {
       setStatus('Error!');

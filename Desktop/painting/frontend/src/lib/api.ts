@@ -69,5 +69,14 @@ export const uploadFile = async (file: File, options: UploadOptions, onUploadPro
     throw new Error(errorData.error || 'Upload failed');
   }
   
+  // Check if we got a demo response (status 202) instead of a file
+  if (response.status === 202) {
+    const demoData = await response.json();
+    // Return a demo blob or handle demo mode
+    const demoMessage = `Demo Mode: ${demoData.message}\n\nFile: ${demoData.filename}\nDuration: ${demoData.duration}s\nQuality: ${demoData.quality}\nStyle: ${demoData.style}`;
+    const blob = new Blob([demoMessage], { type: 'text/plain' });
+    return blob;
+  }
+  
   return response.blob();
 }; 
