@@ -1,5 +1,5 @@
 // src/lib/api.ts
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://makart.onrender.com/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 async function fetchApi(path: string, options: RequestInit = {}) {
   const defaultOptions: RequestInit = {
