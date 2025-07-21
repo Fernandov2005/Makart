@@ -58,8 +58,8 @@ export const logout = async () => {
   return response.json();
 };
 
-export const checkAuth = async () => {
-  const response = await fetchApi('/auth/check');
+export const checkSession = async () => {
+  const response = await fetchApi('/session');
   return response.json();
 };
 
