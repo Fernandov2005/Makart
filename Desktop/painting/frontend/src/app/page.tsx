@@ -36,8 +36,8 @@ export default function Home() {
       size: selectedFile.size,
       sizeInMB: (selectedFile.size / 1024 / 1024).toFixed(2),
       type: selectedFile.type,
-      maxSizeBytes: 15 * 1024 * 1024,
-      maxSizeMB: 15
+      maxSizeBytes: 25 * 1024 * 1024,
+      maxSizeMB: 25
     });
 
     // Check file type
